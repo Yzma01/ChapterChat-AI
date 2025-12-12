@@ -50,6 +50,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = context.watch<ThemeProvider>();
+
     return Scaffold(
       body: BlocListener<SignupBloc, SignupState>(
         listener: (context, state) {

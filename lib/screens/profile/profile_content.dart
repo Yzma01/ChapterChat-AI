@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../widgets/profile/plan_card.dart';
 
 class ProfileContent extends StatefulWidget {
   final AppThemeColors colors;
-  final ThemeProvider themeProvider;
 
-  const ProfileContent({
-    super.key,
-    required this.colors,
-    required this.themeProvider,
-  });
+  const ProfileContent({super.key, required this.colors});
 
   @override
   State<ProfileContent> createState() => _ProfileContentState();
@@ -186,14 +182,14 @@ class _ProfileContentState extends State<ProfileContent> {
   }
 
   Widget _buildThemeToggle() {
-    final isDark = widget.themeProvider.isDarkMode;
+    final isDark = context.watch()<ThemeProvider>().isDarkMode;
     final colors = widget.colors;
 
     return Material(
       color: colors.primary,
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
-        onTap: () => widget.themeProvider.toggleTheme(),
+        onTap: () => context.watch()<ThemeProvider>().toggleTheme(),
         borderRadius: BorderRadius.circular(24),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

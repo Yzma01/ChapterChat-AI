@@ -1,5 +1,6 @@
 import 'package:chapter_chat_ai/core/theme/theme_provider.dart';
 import 'package:chapter_chat_ai/screens/auth/signup_screen.dart';
+import 'package:chapter_chat_ai/screens/main_shell.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_button.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_icon.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_text.dart';
@@ -45,7 +46,10 @@ class _LogginScreenState extends State<LogginScreen> {
 
           if (state is AuthSuccess) {
             Navigator.pop(context); // remove loading
-            Navigator.pushReplacementNamed(context, "/home");
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MainShell()),
+            );
           }
         },
         child: SafeArea(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../models/chat_character.dart';
@@ -7,15 +8,9 @@ import 'chat_screen.dart';
 
 class ChatContent extends StatelessWidget {
   final AppThemeColors colors;
-  final ThemeProvider themeProvider;
   final String searchQuery;
 
-  const ChatContent({
-    super.key,
-    required this.colors,
-    required this.themeProvider,
-    this.searchQuery = '',
-  });
+  const ChatContent({super.key, required this.colors, this.searchQuery = ''});
 
   // Lista de personajes de ejemplo (ordenados por más reciente)
   List<ChatCharacter> get _characters => [
@@ -60,6 +55,7 @@ class ChatContent extends StatelessWidget {
   }
 
   void _onCharacterTap(BuildContext context, ChatCharacter character) {
+    final themeProvider = context.read<ThemeProvider>();
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder:
@@ -88,6 +84,7 @@ class ChatContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     final displayCharacters = filteredCharacters;
 
     if (displayCharacters.isEmpty) {

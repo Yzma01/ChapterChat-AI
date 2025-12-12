@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../core/theme/theme_provider.dart';
 import '../models/book.dart';
 import '../widgets/common/bottom_nav_bar.dart';
@@ -10,9 +11,7 @@ import 'shop/shop_content.dart';
 import 'profile/profile_content.dart';
 
 class MainShell extends StatefulWidget {
-  final ThemeProvider themeProvider;
-
-  const MainShell({super.key, required this.themeProvider});
+  const MainShell({super.key});
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -198,7 +197,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = widget.themeProvider.colors;
+    final colors = context.watch<ThemeProvider>().colors;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -271,7 +270,7 @@ class _MainShellState extends State<MainShell> {
   }
 
   Widget _buildContent() {
-    final colors = widget.themeProvider.colors;
+    final colors = context.watch<ThemeProvider>().colors;
 
     switch (_currentTab) {
       case NavTab.home:
@@ -283,18 +282,11 @@ class _MainShellState extends State<MainShell> {
           onBookActionPressed: _onBookActionPressed,
         );
       case NavTab.chat:
-        return ChatContent(
-          colors: colors,
-          themeProvider: widget.themeProvider,
-          searchQuery: _searchQuery,
-        );
+        return ChatContent(colors: colors, searchQuery: _searchQuery);
       case NavTab.shop:
         return ShopContent(colors: colors, searchQuery: _searchQuery);
       case NavTab.profile:
-        return ProfileContent(
-          colors: colors,
-          themeProvider: widget.themeProvider,
-        );
+        return ProfileContent(colors: colors);
     }
   }
 }
