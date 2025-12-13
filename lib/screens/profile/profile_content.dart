@@ -182,14 +182,15 @@ class _ProfileContentState extends State<ProfileContent> {
   }
 
   Widget _buildThemeToggle() {
-    final isDark = context.watch<ThemeProvider>().isDarkMode;
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDarkMode;
     final colors = widget.colors;
 
     return Material(
       color: colors.primary,
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
-        onTap: () => context.watch<ThemeProvider>().toggleTheme(),
+        onTap: () => context.read<ThemeProvider>().toggleTheme(),
         borderRadius: BorderRadius.circular(24),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
