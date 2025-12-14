@@ -87,10 +87,10 @@ class _ProfileContentState extends State<ProfileContent> {
                         shape: BoxShape.circle,
                         color: Colors.deepPurple,
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Text(
-                          'F',
-                          style: TextStyle(
+                          state.name.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 52,
                             fontWeight: FontWeight.w500,

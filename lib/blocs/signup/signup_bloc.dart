@@ -21,9 +21,9 @@ class SignupBloc extends Bloc<SignupEvent, SignupState> {
         event.password,
         event.name,
         event.username,
-        event.role,
-        event.birthdate,
         event.lastname,
+        event.birthdate,
+        event.role,
       );
       emit(SignupSuccess());
     } catch (e) {

@@ -1,3 +1,5 @@
+import 'package:chapter_chat_ai/blocs/user/user_bloc.dart';
+import 'package:chapter_chat_ai/blocs/user/user_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../core/theme/theme_provider.dart';
@@ -224,69 +226,76 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final colors = context.watch<ThemeProvider>().colors;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      color: colors.background,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        resizeToAvoidBottomInset: false,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: CustomScrollView(
-                  physics:
-                      _isSearchFocused
-                          ? const NeverScrollableScrollPhysics()
-                          : const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverAppBar(
-                      floating: true,
-                      snap: false,
-                      backgroundColor:
-                          _currentTab == NavTab.shop
-                              ? Colors.transparent
-                              : colors.background,
-                      surfaceTintColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      foregroundColor: Colors.transparent,
-                      elevation: 0,
-                      scrolledUnderElevation: 0,
-                      toolbarHeight: 72,
-                      automaticallyImplyLeading: false,
-                      flexibleSpace: SearchHeader(
-                        colors: colors,
-                        controller: _searchController,
-                        onChanged: _onSearchChanged,
-                        onFocusChanged: _onSearchFocusChanged,
-                        hintText: 'Search Books',
-                        transparentBackground: _currentTab == NavTab.shop,
-                        showPublishButton: true,
-                        onPublishPressed: _onPublishPressed,
+    return BlocBuilder<ProfileBloc, ProfileState>(
+      builder: (context, state) {
+        if (state is ProfileLoaded) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            color: colors.background,
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              resizeToAvoidBottomInset: false,
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: CustomScrollView(
+                        physics:
+                            _isSearchFocused
+                                ? const NeverScrollableScrollPhysics()
+                                : const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          SliverAppBar(
+                            floating: true,
+                            snap: false,
+                            backgroundColor:
+                                _currentTab == NavTab.shop
+                                    ? Colors.transparent
+                                    : colors.background,
+                            surfaceTintColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.transparent,
+                            elevation: 0,
+                            scrolledUnderElevation: 0,
+                            toolbarHeight: 72,
+                            automaticallyImplyLeading: false,
+                            flexibleSpace: SearchHeader(
+                              colors: colors,
+                              controller: _searchController,
+                              onChanged: _onSearchChanged,
+                              onFocusChanged: _onSearchFocusChanged,
+                              hintText: 'Search Books',
+                              transparentBackground: _currentTab == NavTab.shop,
+                              showPublishButton: true,
+                              onPublishPressed: _onPublishPressed,
+                            ),
+                          ),
+
+                          if (_currentSectionTitle != null)
+                            StickySectionHeader(
+                              title: _currentSectionTitle!,
+                              colors: colors,
+                            ),
+
+                          _buildContent(),
+                        ],
                       ),
                     ),
 
-                    if (_currentSectionTitle != null)
-                      StickySectionHeader(
-                        title: _currentSectionTitle!,
-                        colors: colors,
-                      ),
-
-                    _buildContent(),
+                    BottomNavBar(
+                      currentTab: _currentTab,
+                      onTabSelected: _onTabSelected,
+                      colors: colors,
+                      profileInitial: state.name.substring(0, 1).toUpperCase(),
+                    ),
                   ],
                 ),
               ),
-
-              BottomNavBar(
-                currentTab: _currentTab,
-                onTabSelected: _onTabSelected,
-                colors: colors,
-                profileInitial: 'F',
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 
