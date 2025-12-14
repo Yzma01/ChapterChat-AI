@@ -5,7 +5,11 @@ import 'package:chapter_chat_ai/blocs/loggin/loggin_bloc.dart';
 import 'package:chapter_chat_ai/blocs/loggin/repository/loggin_repository.dart';
 import 'package:chapter_chat_ai/blocs/signup/repository/signup_repository.dart';
 import 'package:chapter_chat_ai/blocs/signup/signup_bloc.dart';
+import 'package:chapter_chat_ai/blocs/user/repository/user_repository.dart';
+import 'package:chapter_chat_ai/blocs/user/user_bloc.dart';
+import 'package:chapter_chat_ai/blocs/user/user_event.dart';
 import 'package:chapter_chat_ai/screens/auth/loggin_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -33,6 +37,9 @@ void main() async {
       providers: [
         BlocProvider(create: (_) => AuthBloc(AuthRepository())),
         BlocProvider(create: (_) => SignupBloc(SignupRepository())),
+        BlocProvider(
+          create: (_) => ProfileBloc(UserRepository())..add(LoadProfile()),
+        ),
       ],
       child: ChangeNotifierProvider(
         create: (_) => ThemeProvider(),
@@ -104,9 +111,26 @@ class MyApp extends StatelessWidget {
       // ============================================================
       // PANTALLA DE LOGIN COMENTADA TEMPORALMENTE
       // ============================================================
-      home: const LogginScreen(), // 👈 Ya NO necesita ThemeProvider
-      // 👇 CARGA DIRECTA AL HOME (MainShell)
-      //home: MainShell(themeProvider: themeProvider),
+      home: StreamBuilder<User?>(
+        stream:
+            FirebaseAuth.instance
+                .authStateChanges(), // Escucha cambios de autenticación
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            ); // Muestra un indicador mientras se verifica el estado
+          } else if (snapshot.hasError) {
+            return const LogginScreen();
+          } else if (snapshot.hasData) {
+            // Si el usuario está autenticado, muestra la pantalla principal
+            return const MainShell();
+          } else {
+            // Si el usuario no está autenticado, muestra la pantalla de login
+            return const LogginScreen();
+          }
+        },
+      ),
     );
   }
 }
