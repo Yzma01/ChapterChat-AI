@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-class CustomIcon extends StatefulWidget {
+class CustomIcon extends StatelessWidget {
   final IconData icon;
   final double? size;
   final Color? color;
@@ -8,12 +8,7 @@ class CustomIcon extends StatefulWidget {
   const CustomIcon({super.key, required this.icon, this.size, this.color});
 
   @override
-  State<CustomIcon> createState() => _CustomIconState();
-}
-
-class _CustomIconState extends State<CustomIcon> {
-  @override
   Widget build(BuildContext context) {
-    return Icon(widget.icon, size: widget.size, color: widget.color);
+    return Icon(icon, size: size, color: color);
   }
 }

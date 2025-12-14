@@ -5,13 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class CustomDatepicker extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
-  final IconData icon;
 
   const CustomDatepicker({
     super.key,
     required this.controller,
     required this.hintText,
-    required this.icon,
   });
 
   @override
@@ -25,15 +23,15 @@ class _CustomDatepickerState extends State<CustomDatepicker> {
 
     final picked = await showDatePicker(
       context: context,
-      initialDate: now,
+      initialDate: DateTime(now.year - 18), // Default to 18 years ago
       firstDate: DateTime(1900),
-      lastDate: DateTime(now.year + 5),
+      lastDate: now,
       builder: (context, child) {
         return Theme(
-          data: ThemeData(
+          data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
               primary: theme.colors.primary,
-
+              onPrimary: Colors.white,
               surface: theme.colors.surface,
               onSurface: theme.colors.textPrimary,
             ),
@@ -50,7 +48,7 @@ class _CustomDatepickerState extends State<CustomDatepicker> {
 
     if (picked != null) {
       widget.controller.text =
-          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+          "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
       setState(() {});
     }
   }
@@ -60,50 +58,39 @@ class _CustomDatepickerState extends State<CustomDatepicker> {
     final theme = context.watch<ThemeProvider>();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colors.background,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colors.shadow.withOpacity(0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: GestureDetector(
-          onTap: _selectDate,
-          child: AbsorbPointer(
-            child: TextFormField(
-              controller: widget.controller,
-              style: TextStyle(color: theme.colors.textPrimary),
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  widget.icon,
-                  color: theme.colors.textSecondary,
-                ),
-                hintText: widget.hintText,
-                hintStyle: TextStyle(
-                  color: theme.colors.textPrimary.withOpacity(0.4),
-                ),
-                filled: true,
-                fillColor: theme.colors.background,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: theme.colors.surface,
-                    width: 1.5,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: theme.colors.primary,
-                    width: 1.5,
-                  ),
-                ),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: GestureDetector(
+        onTap: _selectDate,
+        child: AbsorbPointer(
+          child: TextField(
+            controller: widget.controller,
+            style: TextStyle(color: theme.colors.textPrimary, fontSize: 16),
+            decoration: InputDecoration(
+              labelText: widget.hintText,
+              labelStyle: TextStyle(
+                color: theme.colors.textSecondary,
+                fontSize: 16,
+              ),
+              floatingLabelStyle: TextStyle(
+                color: theme.colors.primary,
+                fontSize: 14,
+              ),
+              suffixIcon: Icon(
+                Icons.calendar_today_outlined,
+                color: theme.colors.iconDefault,
+                size: 20,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(color: theme.colors.border, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(color: theme.colors.primary, width: 2),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
               ),
             ),
           ),

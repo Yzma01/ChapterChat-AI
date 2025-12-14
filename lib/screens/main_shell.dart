@@ -9,6 +9,7 @@ import 'home/home_content.dart';
 import 'chat/chat_content.dart';
 import 'shop/shop_content.dart';
 import 'profile/profile_content.dart';
+import 'publish/publish_book_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -168,7 +169,6 @@ class _MainShellState extends State<MainShell> {
   void _onTabSelected(NavTab tab) {
     setState(() {
       _currentTab = tab;
-      // Limpiar búsqueda al cambiar de tab
       _searchController.clear();
       _searchQuery = '';
     });
@@ -182,7 +182,32 @@ class _MainShellState extends State<MainShell> {
     debugPrint('Acción en libro: ${book.title}');
   }
 
-  // Obtener el título de la sección según el tab actual
+  void _onPublishPressed() {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder:
+            (context, animation, secondaryAnimation) =>
+                const PublishBookScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
   String? get _currentSectionTitle {
     switch (_currentTab) {
       case NavTab.home:
@@ -191,7 +216,7 @@ class _MainShellState extends State<MainShell> {
         return 'AI Chats';
       case NavTab.shop:
       case NavTab.profile:
-        return null; // No sticky header for these tabs
+        return null;
     }
   }
 
@@ -208,16 +233,13 @@ class _MainShellState extends State<MainShell> {
         body: SafeArea(
           child: Column(
             children: [
-              // Contenido principal con CustomScrollView
               Expanded(
                 child: CustomScrollView(
-                  // Deshabilitar scroll cuando la búsqueda está enfocada
                   physics:
                       _isSearchFocused
                           ? const NeverScrollableScrollPhysics()
                           : const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    // Search bar flotante - transparente solo en Store
                     SliverAppBar(
                       floating: true,
                       snap: false,
@@ -239,23 +261,22 @@ class _MainShellState extends State<MainShell> {
                         onFocusChanged: _onSearchFocusChanged,
                         hintText: 'Search Books',
                         transparentBackground: _currentTab == NavTab.shop,
+                        showPublishButton: true,
+                        onPublishPressed: _onPublishPressed,
                       ),
                     ),
 
-                    // Sticky section header (solo para Home y Chat)
                     if (_currentSectionTitle != null)
                       StickySectionHeader(
                         title: _currentSectionTitle!,
                         colors: colors,
                       ),
 
-                    // Contenido según el tab seleccionado
                     _buildContent(),
                   ],
                 ),
               ),
 
-              // Footer de navegación (siempre fijo)
               BottomNavBar(
                 currentTab: _currentTab,
                 onTabSelected: _onTabSelected,

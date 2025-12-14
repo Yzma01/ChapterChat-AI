@@ -2,7 +2,6 @@ import 'package:chapter_chat_ai/core/theme/theme_provider.dart';
 import 'package:chapter_chat_ai/screens/auth/signup_screen.dart';
 import 'package:chapter_chat_ai/screens/main_shell.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_button.dart';
-import 'package:chapter_chat_ai/widgets/components/custom_icon.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_text.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_textfield.dart';
 import 'package:flutter/material.dart';
@@ -23,29 +22,45 @@ class _LogginScreenState extends State<LogginScreen> {
   final passCtrl = TextEditingController();
 
   @override
+  void dispose() {
+    emailCtrl.dispose();
+    passCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = context.watch<ThemeProvider>();
+
     return Scaffold(
+      backgroundColor: theme.colors.background,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthLoading) {
-            // Show loading dialog
             showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (_) => const Center(child: CircularProgressIndicator()),
+              builder:
+                  (_) => Center(
+                    child: CircularProgressIndicator(
+                      color: theme.colors.primary,
+                    ),
+                  ),
             );
           }
 
           if (state is AuthFailure) {
-            Navigator.pop(context); // remove loading
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.error)));
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error),
+                backgroundColor: theme.colors.error,
+              ),
+            );
           }
 
           if (state is AuthSuccess) {
-            Navigator.pop(context); // remove loading
+            Navigator.pop(context);
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const MainShell()),
@@ -54,62 +69,119 @@ class _LogginScreenState extends State<LogginScreen> {
         },
         child: SafeArea(
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CustomIcon(
-                    icon: Icons.person,
-                    size: 100,
-                    color: theme.colors.primary,
+                  // App Logo/Icon
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: theme.colors.primary,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(
+                      Icons.auto_stories,
+                      color: Colors.white,
+                      size: 44,
+                    ),
                   ),
-                  const SizedBox(height: 20),
 
+                  const SizedBox(height: 24),
+
+                  // Title
+                  Text(
+                    'Sign in',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w400,
+                      color: theme.colors.textPrimary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Subtitle
+                  Text(
+                    'Use your ChapterChat account',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: theme.colors.textSecondary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // Email field
                   CustomTextfield(
                     controller: emailCtrl,
                     hintText: 'Email',
-                    icon: Icons.email,
+                    keyboardType: TextInputType.emailAddress,
                   ),
 
+                  // Password field
                   CustomTextfield(
                     controller: passCtrl,
                     hintText: 'Password',
                     isPassword: true,
-                    icon: Icons.password,
                   ),
 
-                  const SizedBox(height: 20),
-
-                  CustomText(
-                    text: "Create an account",
-                    isLink: true,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignupScreen(),
-                        ),
-                      );
-                    },
+                  // Forgot password link
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: CustomText(
+                      text: 'Forgot password?',
+                      isLink: true,
+                      onTap: () {
+                        debugPrint('Forgot password pressed');
+                      },
+                    ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 32),
 
-                  BlocBuilder<AuthBloc, AuthState>(
-                    builder: (context, state) {
-                      return CustomButton(
-                        text: state is AuthLoading ? "Loading..." : "Login",
-                        onPressed: () {
-                          final email = emailCtrl.text.trim();
-                          final pass = passCtrl.text.trim();
-
-                          context.read<AuthBloc>().add(
-                            LoginRequested(email: email, password: pass),
+                  // Create account and Login row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Create account link
+                      CustomText(
+                        text: 'Create account',
+                        isLink: true,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignupScreen(),
+                            ),
                           );
                         },
-                      );
-                    },
+                      ),
+
+                      // Login button
+                      BlocBuilder<AuthBloc, AuthState>(
+                        builder: (context, state) {
+                          return SizedBox(
+                            width: 100,
+                            child: CustomButton(
+                              text: 'Sign in',
+                              isLoading: state is AuthLoading,
+                              onPressed: () {
+                                final email = emailCtrl.text.trim();
+                                final pass = passCtrl.text.trim();
+
+                                context.read<AuthBloc>().add(
+                                  LoginRequested(email: email, password: pass),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

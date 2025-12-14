@@ -2,7 +2,7 @@ import 'package:chapter_chat_ai/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class CustomText extends StatefulWidget {
+class CustomText extends StatelessWidget {
   final String text;
   final TextStyle? style;
   final bool isLink;
@@ -17,27 +17,28 @@ class CustomText extends StatefulWidget {
   });
 
   @override
-  State<CustomText> createState() => _CustomTextState();
-}
-
-class _CustomTextState extends State<CustomText> {
-  @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
-    return Center(
-      child:
-          (widget.isLink)
-              ? GestureDetector(
-                onTap: widget.onTap,
-                child: Text(
-                  widget.text,
-                  style:
-                      widget.style ??
-                      TextStyle(color: themeProvider.colors.primary),
-                  textAlign: TextAlign.right,
-                ),
-              )
-              : (Text(widget.text, style: widget.style)),
+    final theme = context.watch<ThemeProvider>();
+
+    if (isLink) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Text(
+          text,
+          style:
+              style ??
+              TextStyle(
+                color: theme.colors.primary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+        ),
+      );
+    }
+
+    return Text(
+      text,
+      style: style ?? TextStyle(color: theme.colors.textPrimary, fontSize: 14),
     );
   }
 }
