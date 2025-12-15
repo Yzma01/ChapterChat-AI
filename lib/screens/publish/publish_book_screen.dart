@@ -4,6 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../widgets/common/detail_header.dart';
+import '../../widgets/form/validating_text_field.dart';
+import '../../widgets/form/validating_dropdown.dart';
+import '../../widgets/form/age_rating_selector.dart';
+import '../../widgets/form/pdf_uploader.dart';
+import '../../widgets/form/character_form_card.dart';
+import '../../widgets/form/add_character_button.dart';
+import '../../widgets/form/section_title.dart';
 
 class PublishBookScreen extends StatefulWidget {
   const PublishBookScreen({super.key});
@@ -28,6 +35,10 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
   String? _selectedLanguage;
   int _minimumAge = 0;
   String? _pdfFileName;
+
+  // Validation state
+  bool _hasTriedToSubmit = false;
+  bool _pdfHasError = false;
 
   // Characters list
   final List<CharacterFormData> _characters = [];
@@ -103,10 +114,16 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
     // For now, just simulate selection
     setState(() {
       _pdfFileName = 'my_book.pdf';
+      _pdfHasError = false;
     });
   }
 
   void _onPublish() {
+    setState(() {
+      _hasTriedToSubmit = true;
+      _pdfHasError = _pdfFileName == null;
+    });
+
     if (_formKey.currentState!.validate()) {
       // Validate characters if any are added
       bool hasEmptyCharacters = false;
@@ -194,14 +211,15 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                     const SizedBox(height: 32),
 
                     // Book Details Section
-                    _buildSectionTitle('Book details', colors),
+                    SectionTitle(title: 'Book details', colors: colors),
                     const SizedBox(height: 16),
 
                     // Title field
-                    _buildTextField(
+                    ValidatingTextField(
                       controller: _titleController,
                       label: 'Book title',
                       colors: colors,
+                      isRequired: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a title';
@@ -211,13 +229,14 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                     ),
 
                     // Description field
-                    _buildTextField(
+                    ValidatingTextField(
                       controller: _descriptionController,
                       label: 'Description',
                       colors: colors,
                       maxLines: 4,
                       maxLength: 500,
                       helperText: 'Describe your book to attract readers',
+                      isRequired: true,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a description';
@@ -230,29 +249,43 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: _buildDropdown(
+                          child: ValidatingDropdown(
                             label: 'Genre',
                             value: _selectedGenre,
                             items: _genres,
                             colors: colors,
+                            isRequired: true,
                             onChanged: (value) {
                               setState(() {
                                 _selectedGenre = value;
                               });
                             },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select';
+                              }
+                              return null;
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _buildDropdown(
+                          child: ValidatingDropdown(
                             label: 'Language',
                             value: _selectedLanguage,
                             items: _languages,
                             colors: colors,
+                            isRequired: true,
                             onChanged: (value) {
                               setState(() {
                                 _selectedLanguage = value;
                               });
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select';
+                              }
+                              return null;
                             },
                           ),
                         ),
@@ -263,7 +296,7 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: _buildTextField(
+                          child: ValidatingTextField(
                             controller: _pagesController,
                             label: 'Pages',
                             colors: colors,
@@ -271,6 +304,7 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
+                            isRequired: true,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Required';
@@ -281,7 +315,7 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: _buildTextField(
+                          child: ValidatingTextField(
                             controller: _priceController,
                             label: 'Price (CRC)',
                             colors: colors,
@@ -289,6 +323,7 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
+                            isRequired: true,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Required';
@@ -301,17 +336,27 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                     ),
 
                     // Age rating
-                    _buildAgeRatingSelector(colors),
+                    AgeRatingSelector(
+                      selectedAge: _minimumAge,
+                      ageRatings: _ageRatings,
+                      colors: colors,
+                      label: 'Minimum age',
+                      onAgeSelected: (age) {
+                        setState(() {
+                          _minimumAge = age;
+                        });
+                      },
+                    ),
 
                     // Publisher (optional)
-                    _buildTextField(
+                    ValidatingTextField(
                       controller: _publisherController,
                       label: 'Publisher (optional)',
                       colors: colors,
                     ),
 
                     // Setting (optional)
-                    _buildTextField(
+                    ValidatingTextField(
                       controller: _settingController,
                       label: 'Story setting (optional)',
                       colors: colors,
@@ -322,14 +367,20 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                     const SizedBox(height: 32),
 
                     // PDF Upload Section
-                    _buildSectionTitle('Book file', colors),
+                    SectionTitle(title: 'Book file', colors: colors),
                     const SizedBox(height: 16),
-                    _buildPDFUploader(colors),
+                    PdfUploader(
+                      fileName: _pdfFileName,
+                      colors: colors,
+                      onTap: _pickPDF,
+                      hasError: _pdfHasError,
+                      errorText: 'Please upload your book PDF',
+                    ),
 
                     const SizedBox(height: 32),
 
                     // Characters Section
-                    _buildSectionTitle('AI Characters', colors),
+                    SectionTitle(title: 'AI Characters', colors: colors),
                     const SizedBox(height: 8),
                     Text(
                       'Add characters that readers can chat with. Characters are optional, but if added, all fields are required.',
@@ -342,12 +393,20 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
 
                     // Characters list
                     ..._characters.asMap().entries.map(
-                      (entry) =>
-                          _buildCharacterCard(entry.key, entry.value, colors),
+                      (entry) => CharacterFormCard(
+                        index: entry.key,
+                        character: entry.value,
+                        colors: colors,
+                        onRemove: () => _removeCharacter(entry.key),
+                        showValidationErrors: _hasTriedToSubmit,
+                      ),
                     ),
 
                     // Add character button
-                    _buildAddCharacterButton(colors),
+                    AddCharacterButton(
+                      colors: colors,
+                      onPressed: _addCharacter,
+                    ),
 
                     const SizedBox(height: 40),
 
@@ -384,361 +443,5 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
         ],
       ),
     );
-  }
-
-  Widget _buildSectionTitle(String title, AppThemeColors colors) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: colors.textPrimary,
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required AppThemeColors colors,
-    int maxLines = 1,
-    int? maxLength,
-    String? helperText,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    String? Function(String?)? validator,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        maxLength: maxLength,
-        keyboardType: keyboardType,
-        inputFormatters: inputFormatters,
-        validator: validator,
-        style: TextStyle(color: colors.textPrimary, fontSize: 16),
-        cursorColor: colors.primary,
-        decoration: InputDecoration(
-          labelText: label,
-          helperText: helperText,
-          helperMaxLines: 2,
-          labelStyle: TextStyle(color: colors.textSecondary, fontSize: 16),
-          floatingLabelStyle: TextStyle(color: colors.primary, fontSize: 14),
-          helperStyle: TextStyle(color: colors.textSecondary, fontSize: 12),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: colors.border, width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: colors.primary, width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: colors.error, width: 1),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: colors.error, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdown({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required AppThemeColors colors,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: DropdownButtonFormField<String>(
-        value: value,
-        isExpanded: true,
-        icon: Icon(Icons.arrow_drop_down, color: colors.iconDefault),
-        dropdownColor: colors.surface,
-        style: TextStyle(color: colors.textPrimary, fontSize: 16),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: colors.textSecondary, fontSize: 16),
-          floatingLabelStyle: TextStyle(color: colors.primary, fontSize: 14),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: colors.border, width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: colors.primary, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 16,
-          ),
-        ),
-        items:
-            items
-                .map(
-                  (item) => DropdownMenuItem<String>(
-                    value: item,
-                    child: Text(item, overflow: TextOverflow.ellipsis),
-                  ),
-                )
-                .toList(),
-        onChanged: onChanged,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please select';
-          }
-          return null;
-        },
-      ),
-    );
-  }
-
-  Widget _buildAgeRatingSelector(AppThemeColors colors) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Minimum age',
-            style: TextStyle(fontSize: 14, color: colors.textSecondary),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children:
-                _ageRatings.map((age) {
-                  final isSelected = _minimumAge == age;
-                  return ChoiceChip(
-                    label: Text(age == 0 ? 'All ages' : '$age+'),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _minimumAge = age;
-                      });
-                    },
-                    selectedColor: colors.primary,
-                    backgroundColor: colors.surface,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : colors.textPrimary,
-                      fontWeight:
-                          isSelected ? FontWeight.w500 : FontWeight.normal,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(
-                        color: isSelected ? colors.primary : colors.border,
-                      ),
-                    ),
-                  );
-                }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPDFUploader(AppThemeColors colors) {
-    return GestureDetector(
-      onTap: _pickPDF,
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: colors.border,
-            width: 1,
-            style: BorderStyle.solid,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              _pdfFileName != null ? Icons.picture_as_pdf : Icons.upload_file,
-              size: 48,
-              color: _pdfFileName != null ? colors.primary : colors.iconDefault,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _pdfFileName ?? 'Upload PDF',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _pdfFileName != null
-                  ? 'Tap to change file'
-                  : 'Only PDF files are accepted',
-              style: TextStyle(fontSize: 14, color: colors.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCharacterCard(
-    int index,
-    CharacterFormData character,
-    AppThemeColors colors,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with title and delete button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Character ${index + 1}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textPrimary,
-                ),
-              ),
-              IconButton(
-                onPressed: () => _removeCharacter(index),
-                icon: Icon(Icons.delete_outline, color: colors.error, size: 22),
-                tooltip: 'Remove character',
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          // Name field
-          TextFormField(
-            controller: character.nameController,
-            style: TextStyle(color: colors.textPrimary, fontSize: 16),
-            cursorColor: colors.primary,
-            decoration: InputDecoration(
-              labelText: 'Character name',
-              labelStyle: TextStyle(color: colors.textSecondary, fontSize: 16),
-              floatingLabelStyle: TextStyle(
-                color: colors.primary,
-                fontSize: 14,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: colors.border, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: colors.primary, width: 2),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Description field
-          TextFormField(
-            controller: character.descriptionController,
-            style: TextStyle(color: colors.textPrimary, fontSize: 16),
-            cursorColor: colors.primary,
-            maxLines: 3,
-            maxLength: 150,
-            decoration: InputDecoration(
-              labelText: 'Character description',
-              helperText:
-                  'Describe personality, role, and key traits. Be detailed for better AI responses.',
-              helperMaxLines: 2,
-              labelStyle: TextStyle(color: colors.textSecondary, fontSize: 16),
-              floatingLabelStyle: TextStyle(
-                color: colors.primary,
-                fontSize: 14,
-              ),
-              helperStyle: TextStyle(color: colors.textSecondary, fontSize: 12),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: colors.border, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: colors.primary, width: 2),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddCharacterButton(AppThemeColors colors) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _addCharacter,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: colors.primary,
-              width: 1,
-              style: BorderStyle.solid,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add, color: colors.primary, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                'Add character',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: colors.primary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Helper class to manage character form data
-class CharacterFormData {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-
-  void dispose() {
-    nameController.dispose();
-    descriptionController.dispose();
   }
 }
