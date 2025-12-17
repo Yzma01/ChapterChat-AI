@@ -9,10 +9,10 @@ import 'package:chapter_chat_ai/blocs/user/repository/user_repository.dart';
 import 'package:chapter_chat_ai/blocs/user/user_bloc.dart';
 import 'package:chapter_chat_ai/blocs/user/user_event.dart';
 import 'package:chapter_chat_ai/screens/auth/loggin_screen.dart';
-import 'package:chapter_chat_ai/screens/chat/const.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,7 +32,9 @@ void main() async {
   await Firebase.initializeApp();
 
   try {
-    Gemini.init(apiKey: GEMINI_API_KEY, enableDebugging: true);
+    await dotenv.load(fileName: ".env");
+    final apiKey = dotenv.env['GEMINI_API_KEY'];
+    Gemini.init(apiKey: apiKey!, enableDebugging: true);
     print('✅ Gemini inicializado correctamente');
   } catch (e) {
     print('❌ Error al inicializar Gemini: $e');
