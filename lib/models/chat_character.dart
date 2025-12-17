@@ -3,8 +3,8 @@ class ChatCharacter {
   final String name;
   final String? avatarPath;
   final DateTime lastMessageTime;
-  final bool hasUnread; // True if character responded but user hasn't read it
-  final String? description; // Brief description for book preview mode
+  final bool hasUnread;
+  final String? description; // Solo para modo bookPreview
 
   ChatCharacter({
     required this.id,

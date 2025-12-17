@@ -9,12 +9,14 @@ import 'package:chapter_chat_ai/blocs/user/repository/user_repository.dart';
 import 'package:chapter_chat_ai/blocs/user/user_bloc.dart';
 import 'package:chapter_chat_ai/blocs/user/user_event.dart';
 import 'package:chapter_chat_ai/screens/auth/loggin_screen.dart';
+import 'package:chapter_chat_ai/screens/chat/const.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:provider/provider.dart';
 
 import 'core/theme/app_colors.dart';
@@ -28,6 +30,13 @@ void main() async {
   // FIREBASE COMENTADO TEMPORALMENTE
   // ============================================================
   await Firebase.initializeApp();
+
+  try {
+    Gemini.init(apiKey: GEMINI_API_KEY, enableDebugging: true);
+    print('✅ Gemini inicializado correctamente');
+  } catch (e) {
+    print('❌ Error al inicializar Gemini: $e');
+  }
 
   runApp(
     // ============================================================

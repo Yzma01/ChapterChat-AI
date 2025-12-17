@@ -12,31 +12,36 @@ class ChatContent extends StatelessWidget {
 
   const ChatContent({super.key, required this.colors, this.searchQuery = ''});
 
-  // Lista de personajes de ejemplo (ordenados por más reciente)
+  // Lista de personajes de ejemplo
   List<ChatCharacter> get _characters => [
     ChatCharacter(
       id: '1',
       name: 'Harry Potter',
       lastMessageTime: DateTime.now().subtract(const Duration(hours: 2)),
       hasUnread: true,
+      description:
+          'The Boy Who Lived, a young wizard who survived the killing curse.',
     ),
     ChatCharacter(
       id: '2',
       name: 'Sherlock Holmes',
       lastMessageTime: DateTime.now().subtract(const Duration(hours: 6)),
       hasUnread: true,
+      description: 'The world\'s only consulting detective.',
     ),
     ChatCharacter(
       id: '3',
       name: 'Holden Caulfield',
       lastMessageTime: DateTime.now().subtract(const Duration(hours: 6)),
       hasUnread: false,
+      description: 'A cynical teenager from New York.',
     ),
     ChatCharacter(
       id: '4',
       name: 'Jon Snow',
       lastMessageTime: DateTime.now().subtract(const Duration(days: 14)),
       hasUnread: false,
+      description: 'A member of the Night\'s Watch.',
     ),
   ];
 
@@ -56,7 +61,6 @@ class ChatContent extends StatelessWidget {
             (context, animation, secondaryAnimation) =>
                 ChatScreen(character: character, colors: themeProvider.colors),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          // Animación de slide de derecha a izquierda
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOut;
@@ -78,14 +82,12 @@ class ChatContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
     final displayCharacters = filteredCharacters;
 
     if (displayCharacters.isEmpty) {
       return _buildEmptyState();
     }
 
-    // El título ahora es manejado por el sticky header en MainShell
     return SliverPadding(
       padding: const EdgeInsets.only(top: 8),
       sliver: SliverList(
