@@ -1,9 +1,9 @@
-import 'package:chapter_chat_ai/blocs/loggin/loggin_bloc.dart';
-import 'package:chapter_chat_ai/blocs/loggin/loggin_event.dart';
-import 'package:chapter_chat_ai/blocs/loggin/loggin_state.dart';
-import 'package:chapter_chat_ai/blocs/user/user_bloc.dart';
-import 'package:chapter_chat_ai/blocs/user/user_event.dart';
-import 'package:chapter_chat_ai/blocs/user/user_state.dart';
+import 'package:chapter_chat_ai/blocs/loggin/bloc/loggin_bloc.dart';
+import 'package:chapter_chat_ai/blocs/loggin/bloc/loggin_event.dart';
+import 'package:chapter_chat_ai/blocs/loggin/bloc/loggin_state.dart';
+import 'package:chapter_chat_ai/blocs/user/bloc/user_bloc.dart';
+import 'package:chapter_chat_ai/blocs/user/bloc/user_event.dart';
+import 'package:chapter_chat_ai/blocs/user/bloc/user_state.dart';
 import 'package:chapter_chat_ai/screens/auth/loggin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

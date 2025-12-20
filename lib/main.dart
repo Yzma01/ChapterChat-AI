@@ -1,13 +1,13 @@
 // ============================================================
 // IMPORTS DE AUTENTICACIÓN (COMENTADOS TEMPORALMENTE)
 // ============================================================
-import 'package:chapter_chat_ai/blocs/loggin/loggin_bloc.dart';
+import 'package:chapter_chat_ai/blocs/loggin/bloc/loggin_bloc.dart';
 import 'package:chapter_chat_ai/blocs/loggin/repository/loggin_repository.dart';
 import 'package:chapter_chat_ai/blocs/signup/repository/signup_repository.dart';
-import 'package:chapter_chat_ai/blocs/signup/signup_bloc.dart';
+import 'package:chapter_chat_ai/blocs/signup/bloc/signup_bloc.dart';
 import 'package:chapter_chat_ai/blocs/user/repository/user_repository.dart';
-import 'package:chapter_chat_ai/blocs/user/user_bloc.dart';
-import 'package:chapter_chat_ai/blocs/user/user_event.dart';
+import 'package:chapter_chat_ai/blocs/user/bloc/user_bloc.dart';
+import 'package:chapter_chat_ai/blocs/user/bloc/user_event.dart';
 import 'package:chapter_chat_ai/screens/auth/loggin_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';

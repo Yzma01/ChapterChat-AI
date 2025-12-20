@@ -1,6 +1,6 @@
-import 'package:chapter_chat_ai/blocs/signup/signup_bloc.dart';
-import 'package:chapter_chat_ai/blocs/signup/signup_event.dart';
-import 'package:chapter_chat_ai/blocs/signup/signup_state.dart';
+import 'package:chapter_chat_ai/blocs/signup/bloc/signup_bloc.dart';
+import 'package:chapter_chat_ai/blocs/signup/bloc/signup_event.dart';
+import 'package:chapter_chat_ai/blocs/signup/bloc/signup_state.dart';
 import 'package:chapter_chat_ai/core/theme/theme_provider.dart';
 import 'package:chapter_chat_ai/screens/main_shell.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_button.dart';

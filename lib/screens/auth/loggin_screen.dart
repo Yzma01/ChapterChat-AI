@@ -6,9 +6,9 @@ import 'package:chapter_chat_ai/widgets/components/custom_text.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../blocs/loggin/loggin_bloc.dart';
-import '../../blocs/loggin/loggin_state.dart';
-import '../../blocs/loggin/loggin_event.dart';
+import '../../blocs/loggin/bloc/loggin_bloc.dart';
+import '../../blocs/loggin/bloc/loggin_state.dart';
+import '../../blocs/loggin/bloc/loggin_event.dart';
 
 class LogginScreen extends StatefulWidget {
   const LogginScreen({super.key});

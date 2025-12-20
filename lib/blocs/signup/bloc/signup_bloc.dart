@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'signup_event.dart';
 import 'signup_state.dart';
-import './repository/signup_repository.dart';
+import '../repository/signup_repository.dart';
 
 class SignupBloc extends Bloc<SignupEvent, SignupState> {
   final SignupRepository signupRepository;

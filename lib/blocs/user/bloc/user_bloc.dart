@@ -1,6 +1,6 @@
 import 'package:chapter_chat_ai/blocs/user/repository/user_repository.dart';
-import 'package:chapter_chat_ai/blocs/user/user_event.dart';
-import 'package:chapter_chat_ai/blocs/user/user_state.dart';
+import 'package:chapter_chat_ai/blocs/user/bloc/user_event.dart';
+import 'package:chapter_chat_ai/blocs/user/bloc/user_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
