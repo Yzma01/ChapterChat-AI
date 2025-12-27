@@ -9,6 +9,7 @@ import 'package:chapter_chat_ai/blocs/user/repository/user_repository.dart';
 import 'package:chapter_chat_ai/blocs/user/bloc/user_bloc.dart';
 import 'package:chapter_chat_ai/blocs/user/bloc/user_event.dart';
 import 'package:chapter_chat_ai/screens/auth/loggin_screen.dart';
+import 'package:chapter_chat_ai/screens/chat/const.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
