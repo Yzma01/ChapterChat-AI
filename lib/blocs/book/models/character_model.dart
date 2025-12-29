@@ -10,4 +10,11 @@ class CharacterModel {
       'createdAt': DateTime.now(),
     };
   }
+
+  factory CharacterModel.fromMap(Map<String, dynamic> map) {
+    return CharacterModel(
+      name: map['name'] ?? '',
+      description: map['description'] ?? '',
+    );
+  }
 }

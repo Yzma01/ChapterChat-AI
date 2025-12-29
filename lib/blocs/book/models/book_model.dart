@@ -1,8 +1,9 @@
 import 'dart:io';
-
-import 'package:chapter_chat_ai/blocs/book/models/character_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'character_model.dart';
 
 class BookModel {
+  final String? id;
   final String title;
   final String description;
   final List<String> genres;
@@ -12,10 +13,17 @@ class BookModel {
   final int minAge;
   final String? publisher;
   final String? storySetting;
-  final File pdfFile;
+
+  // ⚠️ Solo para upload
+  final File? pdfFile;
+
+  // ⚠️ Solo para lectura
+  final String? pdfUrl;
+
   final List<CharacterModel>? characters;
 
   BookModel({
+    this.id,
     required this.title,
     required this.description,
     required this.genres,
@@ -25,10 +33,12 @@ class BookModel {
     required this.minAge,
     this.publisher,
     this.storySetting,
-    required this.pdfFile,
+    this.pdfFile,
+    this.pdfUrl,
     this.characters,
   });
 
+  /// Para guardar en Firestore
   Map<String, dynamic> toMap() {
     return {
       'title': title,
@@ -40,9 +50,32 @@ class BookModel {
       'minAge': minAge,
       'publisher': publisher,
       'storySetting': storySetting,
-      // Note: pdfFile is not included here as it should be uploaded separately
+      'pdfUrl': pdfUrl,
       'characters': characters?.map((c) => c.toMap()).toList(),
-      'createdAt': DateTime.now().toIso8601String(),
+      'createdAt': FieldValue.serverTimestamp(),
     };
+  }
+
+  /// Para leer desde Firestore
+  factory BookModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
+    return BookModel(
+      id: doc.id,
+      title: data['title'],
+      description: data['description'],
+      genres: List<String>.from(data['genres']),
+      language: data['language'],
+      pages: data['pages'],
+      price: (data['price'] as num).toDouble(),
+      minAge: data['minAge'],
+      publisher: data['publisher'],
+      storySetting: data['storySetting'],
+      pdfUrl: data['pdfUrl'],
+      characters:
+          (data['characters'] as List<dynamic>?)
+              ?.map((c) => CharacterModel.fromMap(c))
+              .toList(),
+    );
   }
 }

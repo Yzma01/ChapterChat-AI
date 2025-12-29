@@ -28,20 +28,19 @@ class BookBloc extends Bloc<BookEvent, BookState> {
     }
   }
 
-  Future<List<BookModel>> _fetchBooksRequested(
+  Future<void> _fetchBooksRequested(
     FetchBooksRequested event,
     Emitter<BookState> emit,
   ) async {
     emit(BookLoading());
     try {
-      emit(BookSuccess());
-      return [];
+      final books = await bookRepository.fetchBooks();
+
+      emit(BookLoaded(books));
     } on FirebaseException catch (e) {
       emit(BookFailure(e.message ?? 'An unknown error occurred.'));
-      return [];
     } catch (e) {
       emit(BookFailure(e.toString()));
-      return [];
     }
   }
 }

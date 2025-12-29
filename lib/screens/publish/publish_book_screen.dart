@@ -6,6 +6,8 @@ import 'package:chapter_chat_ai/blocs/book/bloc/book_state.dart';
 import 'package:chapter_chat_ai/blocs/book/models/book_model.dart';
 import 'package:chapter_chat_ai/blocs/book/models/character_model.dart';
 import 'package:chapter_chat_ai/models/book.dart';
+import 'package:chapter_chat_ai/widgets/form/multi_selector.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,6 +45,8 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
   String? _selectedLanguage;
   int _minimumAge = 0;
   String? _pdfFileName;
+  File? _pdfFile;
+  List<String> _selectedGenres = [];
 
   // Validation state
   bool _hasTriedToSubmit = false;
@@ -117,19 +121,6 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
     });
   }
 
-  void _pickPDF() async {
-    // TODO: Implement actual PDF picker using file_picker package
-    // For now, just simulate selection
-    setState(() {
-      _pdfFileName = 'my_book.pdf';
-      _pdfHasError = false;
-    });
-  }
-
-  //! After doing the PDF picker, replace the null with the selected file and delete the _seklectedGenres placeholder
-  final File? _pdfFile = null; // Placeholder for the selected PDF file
-  final List<String> _selectedGenres = []; // Placeholder for selected genres
-
   BookModel getBook() {
     return BookModel(
       title: _titleController.text,
@@ -189,8 +180,6 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
 
       final bookBloc = context.read<BookBloc>();
       bookBloc.add(UploadBookRequested(book: getBook()));
-
-      Navigator.pop(context);
     }
   }
 
@@ -296,22 +285,21 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: ValidatingDropdown(
-                              label: 'Genre',
-                              value: _selectedGenre,
+                            child: ValidatingMultiSelect(
+                              label: 'Genres',
+                              value: _selectedGenres,
                               items: _genres,
                               colors: colors,
-                              isRequired: true,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedGenre = value;
-                                });
-                              },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
+                              validator: (values) {
+                                if (values == null || values.isEmpty) {
                                   return 'Please select';
                                 }
                                 return null;
+                              },
+                              onChanged: (values) {
+                                setState(() {
+                                  _selectedGenres = values;
+                                });
                               },
                             ),
                           ),
@@ -417,11 +405,17 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                       SectionTitle(title: 'Book file', colors: colors),
                       const SizedBox(height: 16),
                       PdfUploader(
-                        fileName: _pdfFileName,
                         colors: colors,
-                        onTap: _pickPDF,
-                        hasError: _pdfHasError,
-                        errorText: 'Please upload your book PDF',
+                        validator: (file) {
+                          if (file == null) {
+                            return 'Please upload your book PDF';
+                          }
+                          return null;
+                        },
+                        onFileSelected: (file) {
+                          _pdfFile = file;
+                          _pdfFileName = file.path.split('/').last;
+                        },
                       ),
 
                       const SizedBox(height: 32),

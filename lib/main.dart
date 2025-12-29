@@ -1,6 +1,8 @@
 // ============================================================
 // IMPORTS DE AUTENTICACIÓN (COMENTADOS TEMPORALMENTE)
 // ============================================================
+import 'package:chapter_chat_ai/blocs/book/bloc/book_bloc.dart';
+import 'package:chapter_chat_ai/blocs/book/repository/book_repository.dart';
 import 'package:chapter_chat_ai/blocs/loggin/bloc/loggin_bloc.dart';
 import 'package:chapter_chat_ai/blocs/loggin/repository/loggin_repository.dart';
 import 'package:chapter_chat_ai/blocs/signup/repository/signup_repository.dart';
@@ -48,6 +50,7 @@ void main() async {
       providers: [
         BlocProvider(create: (_) => AuthBloc(AuthRepository())),
         BlocProvider(create: (_) => SignupBloc(SignupRepository())),
+        BlocProvider(create: (_) => BookBloc(BookRepository())),
         BlocProvider(
           create: (_) => ProfileBloc(UserRepository())..add(LoadProfile()),
         ),
