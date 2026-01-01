@@ -23,6 +23,7 @@ import 'package:provider/provider.dart';
 
 import 'core/theme/app_colors.dart';
 import 'core/theme/theme_provider.dart';
+import 'blocs/chat/repository/chat_local_storage.dart';
 import 'screens/main_shell.dart';
 
 void main() async {
@@ -32,6 +33,8 @@ void main() async {
   // FIREBASE COMENTADO TEMPORALMENTE
   // ============================================================
   await Firebase.initializeApp();
+
+  await ChatLocalStorage.initialize();
 
   try {
     await dotenv.load(fileName: ".env");
