@@ -28,16 +28,11 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   }
 
   void _onBuyPressed() async {
-    final cardData = await CardInputBottomSheet.show(context);
-    if (cardData != null) {
-      print('Card Number: ${cardData.cardNumber}');
-      print('Card Holder: ${cardData.cardHolder}');
-      print('Expiry: ${cardData.expiryDate}');
-      print('CVV: ${cardData.cvv}');
-      setState(() {
-        _book = _book.copyWith(isPurchased: true);
-      });
-    }
+    await CardInputBottomSheet.show(context, book: _book);
+
+    setState(() {
+      _book = _book.copyWith(isPurchased: true);
+    });
   }
 
   @override

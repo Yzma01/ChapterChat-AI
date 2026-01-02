@@ -1,4 +1,5 @@
-import 'package:chapter_chat_ai/screens/shop/card_data_screen.dart';
+import 'package:chapter_chat_ai/blocs/payment/models/card_data_model.dart';
+import 'package:chapter_chat_ai/models/book.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class PaymentEvent extends Equatable {
@@ -8,9 +9,10 @@ abstract class PaymentEvent extends Equatable {
 
 class PaymentRequested extends PaymentEvent {
   final CardData card;
+  final Book book;
 
-  PaymentRequested({required this.card});
+  PaymentRequested({required this.card, required this.book});
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [card, book];
 }

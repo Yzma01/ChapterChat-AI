@@ -1,37 +1,30 @@
 import 'package:chapter_chat_ai/blocs/payment/bloc/payment_bloc.dart';
 import 'package:chapter_chat_ai/blocs/payment/bloc/payment_event.dart';
 import 'package:chapter_chat_ai/blocs/payment/bloc/payment_state.dart';
+import 'package:chapter_chat_ai/blocs/payment/models/card_data_model.dart';
 import 'package:chapter_chat_ai/core/theme/theme_provider.dart';
+import 'package:chapter_chat_ai/models/book.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class CardData {
-  final String cardNumber;
-  final String cardHolder;
-  final String expiryDate;
-  final String cvv;
-
-  CardData({
-    required this.cardNumber,
-    required this.cardHolder,
-    required this.expiryDate,
-    required this.cvv,
-  });
-}
-
 class CardInputBottomSheet extends StatefulWidget {
   final Function(CardData) onSubmit;
+  final Book book;
 
-  const CardInputBottomSheet({Key? key, required this.onSubmit})
-    : super(key: key);
+  const CardInputBottomSheet({
+    Key? key,
+    required this.onSubmit,
+    required this.book,
+  }) : super(key: key);
 
   @override
   State<CardInputBottomSheet> createState() => _CardInputBottomSheetState();
 
-  static Future<CardData?> show(BuildContext context) {
+  static Future<CardData?> show(BuildContext context, {required Book book}) {
     return showModalBottomSheet<CardData>(
       context: context,
+
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -40,8 +33,9 @@ class CardInputBottomSheet extends StatefulWidget {
           (context) => CardInputBottomSheet(
             onSubmit:
                 (cardData) => context.read<PaymentBloc>().add(
-                  PaymentRequested(card: cardData),
+                  PaymentRequested(card: cardData, book: book),
                 ),
+            book: book,
           ),
     );
   }
@@ -56,7 +50,7 @@ class _CardInputBottomSheetState extends State<CardInputBottomSheet> {
     'cvv': TextEditingController(),
   };
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
-
+  String? _errorMessage;
   @override
   void dispose() {
     _controllers.values.forEach((c) => c.dispose());
@@ -122,23 +116,28 @@ class _CardInputBottomSheetState extends State<CardInputBottomSheet> {
 
     return BlocListener<PaymentBloc, PaymentState>(
       listener: (context, state) {
+        debugPrint('Payment state: $state'); // Agrega esto
+
         if (state is PaymentLoading) {
+          debugPrint('Showing loading dialog'); // Y esto
           showDialog(
             context: context,
             barrierDismissible: false,
             builder:
                 (context) => const Center(child: CircularProgressIndicator()),
           );
-        } else {
-          // Hide loading indicator
-          Navigator.of(context, rootNavigator: true).pop();
         }
+
         if (state is PaymentFailure) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${state.error}')));
+          Navigator.of(context, rootNavigator: true).pop();
+          setState(() {
+            _errorMessage = state.error;
+          });
         }
+
         if (state is PaymentSuccess) {
+          Navigator.of(context, rootNavigator: true).pop();
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Book bought successfully!')),
           );
@@ -181,6 +180,40 @@ class _CardInputBottomSheetState extends State<CardInputBottomSheet> {
                 ),
                 const SizedBox(height: 20),
 
+                // Muestra el error aquí
+                if (_errorMessage != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 18),
+                          color: Colors.red,
+                          onPressed: () {
+                            setState(() {
+                              _errorMessage = null;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 // Card Number
                 TextFormField(
                   controller: _controllers['cardNumber'],
