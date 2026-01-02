@@ -5,6 +5,8 @@ import 'package:chapter_chat_ai/blocs/book/bloc/book_bloc.dart';
 import 'package:chapter_chat_ai/blocs/book/repository/book_repository.dart';
 import 'package:chapter_chat_ai/blocs/loggin/bloc/loggin_bloc.dart';
 import 'package:chapter_chat_ai/blocs/loggin/repository/loggin_repository.dart';
+import 'package:chapter_chat_ai/blocs/payment/bloc/payment_bloc.dart';
+import 'package:chapter_chat_ai/blocs/payment/reporitory/payment_repository.dart';
 import 'package:chapter_chat_ai/blocs/signup/repository/signup_repository.dart';
 import 'package:chapter_chat_ai/blocs/signup/bloc/signup_bloc.dart';
 import 'package:chapter_chat_ai/blocs/user/repository/user_repository.dart';
@@ -51,6 +53,7 @@ void main() async {
         BlocProvider(create: (_) => AuthBloc(AuthRepository())),
         BlocProvider(create: (_) => SignupBloc(SignupRepository())),
         BlocProvider(create: (_) => BookBloc(BookRepository())),
+        BlocProvider(create: (_) => PaymentBloc(PaymentRepository())),
         BlocProvider(
           create: (_) => ProfileBloc(UserRepository())..add(LoadProfile()),
         ),

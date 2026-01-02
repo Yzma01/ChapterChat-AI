@@ -1,3 +1,4 @@
+import 'package:chapter_chat_ai/screens/shop/card_data_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
@@ -26,10 +27,17 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     _book = widget.book;
   }
 
-  void _onBuyPressed() {
-    setState(() {
-      _book = _book.copyWith(isPurchased: true);
-    });
+  void _onBuyPressed() async {
+    final cardData = await CardInputBottomSheet.show(context);
+    if (cardData != null) {
+      print('Card Number: ${cardData.cardNumber}');
+      print('Card Holder: ${cardData.cardHolder}');
+      print('Expiry: ${cardData.expiryDate}');
+      print('CVV: ${cardData.cvv}');
+      setState(() {
+        _book = _book.copyWith(isPurchased: true);
+      });
+    }
   }
 
   @override
