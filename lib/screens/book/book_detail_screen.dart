@@ -4,16 +4,25 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../models/book.dart';
 import '../../models/chat_character.dart';
+import '../../blocs/library/models/local_book_model.dart';
 import '../../blocs/chat/repository/active_chats_storage.dart';
-import '../../widgets/book/book_info_card.dart';
 import '../../widgets/book/character_chat_card.dart';
 import '../chat/chat_screen.dart';
+import '../reader/pdf_reader_screen.dart';
 
+/// Simple book detail screen for Home/Library
+/// Shows book info card, read button, and characters to chat with
 class BookDetailScreen extends StatelessWidget {
   final Book book;
   final AppThemeColors colors;
+  final LocalBookModel? localBook;
 
-  const BookDetailScreen({super.key, required this.book, required this.colors});
+  const BookDetailScreen({
+    super.key,
+    required this.book,
+    required this.colors,
+    this.localBook,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +31,7 @@ class BookDetailScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Back button header
             _buildHeader(context),
-
-            // Scrollable content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -33,24 +39,13 @@ class BookDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 8),
-
-                    // Book info card
-                    BookInfoCard(
-                      book: book,
-                      colors: colors,
-                      onReadPressed: () {
-                        // TODO: Implement read functionality
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Read functionality coming soon!'),
-                          ),
-                        );
-                      },
-                    ),
-
+                    _buildBookInfoCard(context),
+                    if (localBook != null &&
+                        localBook!.readingProgress > 0) ...[
+                      const SizedBox(height: 16),
+                      _buildReadingProgress(),
+                    ],
                     const SizedBox(height: 32),
-
-                    // Chat with section
                     if (book.characters != null &&
                         book.characters!.isNotEmpty) ...[
                       Text(
@@ -62,8 +57,6 @@ class BookDetailScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Character list
                       ...book.characters!.map(
                         (character) => Padding(
                           padding: const EdgeInsets.only(bottom: 8),
@@ -75,7 +68,6 @@ class BookDetailScreen extends StatelessWidget {
                         ),
                       ),
                     ],
-
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -102,49 +94,174 @@ class BookDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildBookInfoCard(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildCover(),
+        const SizedBox(width: 20),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                book.title,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                  height: 1.2,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                book.author,
+                style: TextStyle(fontSize: 15, color: colors.textSecondary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Released ${book.releaseDateFormatted}',
+                style: TextStyle(fontSize: 14, color: colors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: 140,
+                child: ElevatedButton(
+                  onPressed:
+                      localBook != null ? () => _onReadPressed(context) : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Read',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCover() {
+    return Container(
+      width: 120,
+      height: 160,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Icon(
+          Icons.menu_book_rounded,
+          size: 48,
+          color: colors.iconDefault.withOpacity(0.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReadingProgress() {
+    final progress = localBook!.readingProgress;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Reading Progress',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+              ),
+              Text(
+                '${(progress * 100).toInt()}%',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: localBook!.isRead ? Colors.green : colors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: colors.border,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                localBook!.isRead ? Colors.green : colors.primary,
+              ),
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Page ${localBook!.currentPage + 1} of ${localBook!.totalPages}',
+            style: TextStyle(fontSize: 12, color: colors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onReadPressed(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PdfReaderScreen(book: localBook!)),
+    );
+  }
+
   Future<void> _onCharacterTap(
     BuildContext context,
     ChatCharacter character,
   ) async {
-    // Add character to active chats list
-    final activeChatData = ActiveChatData(
-      characterId: character.id,
-      characterName: character.name,
-      characterDescription: character.description,
-      avatarPath: character.avatarPath,
-      bookId: book.id,
-      bookTitle: book.title,
-      lastInteractionTime: DateTime.now(),
+    await ActiveChatsStorage.instance.addActiveChat(
+      ActiveChatData(
+        characterId: character.id,
+        characterName: character.name,
+        characterDescription: character.description,
+        avatarPath: character.avatarPath,
+        bookId: book.id,
+        bookTitle: book.title,
+        lastInteractionTime: DateTime.now(),
+      ),
     );
-
-    await ActiveChatsStorage.instance.addActiveChat(activeChatData);
-
-    // Navigate to chat screen
     if (context.mounted) {
-      final themeProvider = context.read<ThemeProvider>();
       Navigator.of(context).push(
-        PageRouteBuilder(
-          pageBuilder:
-              (context, animation, secondaryAnimation) => ChatScreen(
+        MaterialPageRoute(
+          builder:
+              (_) => ChatScreen(
                 character: character,
-                colors: themeProvider.colors,
+                colors: context.read<ThemeProvider>().colors,
               ),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOut;
-
-            var tween = Tween(
-              begin: begin,
-              end: end,
-            ).chain(CurveTween(curve: curve));
-
-            return SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 300),
         ),
       );
     }

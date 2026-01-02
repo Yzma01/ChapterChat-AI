@@ -4,12 +4,12 @@ class Book {
   final String id;
   final String title;
   final String author;
-  final String? coverImagePath;
+  final String? coverImagePath; // Only for bundled asset images (optional)
   final bool isRead;
   final bool isDownloaded;
-  final double readingProgress; // 0.0 a 1.0
-  final double? price; // Precio del libro para la tienda
-  final bool isPurchased; // Si el libro fue comprado
+  final double readingProgress;
+  final double? price;
+  final bool isPurchased;
 
   // Detalles adicionales del libro
   final DateTime? releaseDate;
@@ -21,6 +21,9 @@ class Book {
   final String? genre;
   final String? publisher;
   final String? setting;
+
+  // PDF URL for downloading
+  final String? pdfUrl;
 
   // Personajes disponibles para chat
   final List<ChatCharacter>? characters;
@@ -44,6 +47,7 @@ class Book {
     this.genre,
     this.publisher,
     this.setting,
+    this.pdfUrl,
     this.characters,
   });
 
@@ -119,6 +123,7 @@ class Book {
     String? genre,
     String? publisher,
     String? setting,
+    String? pdfUrl,
     List<ChatCharacter>? characters,
   }) {
     return Book(
@@ -140,6 +145,7 @@ class Book {
       genre: genre ?? this.genre,
       publisher: publisher ?? this.publisher,
       setting: setting ?? this.setting,
+      pdfUrl: pdfUrl ?? this.pdfUrl,
       characters: characters ?? this.characters,
     );
   }

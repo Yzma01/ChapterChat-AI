@@ -1,16 +1,16 @@
-import 'package:chapter_chat_ai/blocs/book/bloc/book_bloc.dart';
-import 'package:chapter_chat_ai/blocs/book/bloc/book_event.dart';
-import 'package:chapter_chat_ai/blocs/book/bloc/book_state.dart';
-import 'package:chapter_chat_ai/blocs/book/models/book_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/book/bloc/book_bloc.dart';
+import '../../blocs/book/bloc/book_event.dart';
+import '../../blocs/book/bloc/book_state.dart';
+import '../../blocs/book/models/book_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../models/book.dart';
 import '../../models/chat_character.dart';
 import '../../widgets/book/book_card.dart';
 import '../../widgets/shop/genre_chip.dart';
-import 'book_detail_screen.dart';
+import 'shop_book_detail_screen.dart';
 
 class ShopContent extends StatefulWidget {
   final AppThemeColors colors;
@@ -50,7 +50,7 @@ class _ShopContentState extends State<ShopContent> {
     return allBooks.where((book) {
       return book.title.toLowerCase().contains(query) ||
           book.author.toLowerCase().contains(query) ||
-          book.genre!.toLowerCase().contains(query);
+          (book.genre?.toLowerCase().contains(query) ?? false);
     }).toList();
   }
 
@@ -69,10 +69,11 @@ class _ShopContentState extends State<ShopContent> {
       publisher: model.publisher ?? '',
       setting: model.storySetting ?? '',
       description: model.description,
+      pdfUrl: model.pdfUrl,
       characters:
           model.characters?.map((c) {
             return ChatCharacter(
-              id: c.name.toLowerCase(),
+              id: c.name.toLowerCase().replaceAll(' ', '_'),
               name: c.name,
               lastMessageTime: DateTime.now(),
               description: c.description,
@@ -82,12 +83,11 @@ class _ShopContentState extends State<ShopContent> {
   }
 
   void _onBookTap(BuildContext context, Book book) {
-    final themeProvider = context.read<ThemeProvider>();
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder:
             (context, animation, secondaryAnimation) =>
-                BookDetailScreen(book: book),
+                ShopBookDetailScreen(book: book),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
@@ -113,9 +113,11 @@ class _ShopContentState extends State<ShopContent> {
     return BlocBuilder<BookBloc, BookState>(
       builder: (context, state) {
         if (state is BookLoading) {
-          return const SliverFillRemaining(
+          return SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(
+              child: CircularProgressIndicator(color: widget.colors.primary),
+            ),
           );
         }
 
@@ -123,9 +125,44 @@ class _ShopContentState extends State<ShopContent> {
           return SliverFillRemaining(
             hasScrollBody: false,
             child: Center(
-              child: Text(
-                'Error: ${state.error}',
-                style: TextStyle(color: widget.colors.textPrimary),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: widget.colors.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading books',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: widget.colors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    state.error,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: widget.colors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<BookBloc>().add(FetchBooksRequested());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: widget.colors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
             ),
           );
@@ -162,7 +199,7 @@ class _ShopContentState extends State<ShopContent> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Try again',
+                      'Try a different search term',
                       style: TextStyle(
                         fontSize: 14,
                         color: widget.colors.textSecondary,
@@ -213,9 +250,29 @@ class _ShopContentState extends State<ShopContent> {
           );
         }
 
-        return const SliverFillRemaining(
+        // Initial or unknown state - show empty
+        return SliverFillRemaining(
           hasScrollBody: false,
-          child: Center(child: Text('Unknown state')),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.store_outlined,
+                  size: 64,
+                  color: widget.colors.iconDefault,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Browse our book collection',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: widget.colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -249,6 +306,7 @@ class _ShopContentState extends State<ShopContent> {
             colors: widget.colors,
             onTap: () {
               debugPrint('Genre Selected: ${_genres[index]}');
+              // TODO: Filter books by genre
             },
           );
         },

@@ -62,13 +62,13 @@ class BookModel {
 
     return BookModel(
       id: doc.id,
-      title: data['title'],
-      description: data['description'],
-      genres: List<String>.from(data['genres']),
-      language: data['language'],
-      pages: data['pages'],
-      price: (data['price'] as num).toDouble(),
-      minAge: data['minAge'],
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      genres: List<String>.from(data['genres'] ?? []),
+      language: data['language'] ?? 'Unknown',
+      pages: data['pages'] ?? 0,
+      price: (data['price'] as num?)?.toDouble() ?? 0.0,
+      minAge: data['minAge'] ?? 0,
       publisher: data['publisher'],
       storySetting: data['storySetting'],
       pdfUrl: data['pdfUrl'],
@@ -76,6 +76,38 @@ class BookModel {
           (data['characters'] as List<dynamic>?)
               ?.map((c) => CharacterModel.fromMap(c))
               .toList(),
+    );
+  }
+
+  BookModel copyWith({
+    String? id,
+    String? title,
+    String? description,
+    List<String>? genres,
+    String? language,
+    int? pages,
+    double? price,
+    int? minAge,
+    String? publisher,
+    String? storySetting,
+    File? pdfFile,
+    String? pdfUrl,
+    List<CharacterModel>? characters,
+  }) {
+    return BookModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      genres: genres ?? this.genres,
+      language: language ?? this.language,
+      pages: pages ?? this.pages,
+      price: price ?? this.price,
+      minAge: minAge ?? this.minAge,
+      publisher: publisher ?? this.publisher,
+      storySetting: storySetting ?? this.storySetting,
+      pdfFile: pdfFile ?? this.pdfFile,
+      pdfUrl: pdfUrl ?? this.pdfUrl,
+      characters: characters ?? this.characters,
     );
   }
 }

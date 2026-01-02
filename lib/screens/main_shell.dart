@@ -1,12 +1,10 @@
-import 'package:chapter_chat_ai/blocs/book/bloc/book_bloc.dart';
-import 'package:chapter_chat_ai/blocs/book/bloc/book_event.dart';
-import 'package:chapter_chat_ai/blocs/user/bloc/user_bloc.dart';
-import 'package:chapter_chat_ai/blocs/user/bloc/user_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/library/bloc/library_bloc.dart';
+import '../blocs/library/bloc/library_event.dart';
+import '../blocs/user/bloc/user_bloc.dart';
+import '../blocs/user/bloc/user_state.dart';
 import '../core/theme/theme_provider.dart';
-import '../models/book.dart';
-import '../models/chat_character.dart';
 import '../widgets/common/bottom_nav_bar.dart';
 import '../widgets/common/search_header.dart';
 import '../widgets/common/sticky_section_header.dart';
@@ -29,415 +27,14 @@ class _MainShellState extends State<MainShell> {
   String _searchQuery = '';
   bool _isSearchFocused = false;
 
-  // Lista de libros de ejemplo con personajes para chat
-  final List<Book> _books = [
-    Book(
-      id: '1',
-      title: 'The Hobbit',
-      author: 'J.R.R. Tolkien',
-      isRead: false,
-      isDownloaded: true,
-      readingProgress: 0.45,
-      releaseDate: DateTime(1937, 9, 21),
-      characters: [
-        ChatCharacter(
-          id: 'gandalf_hobbit',
-          name: 'Gandalf',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Wise, mysterious, and direct. Offers guidance, riddles, and magical insight.',
-        ),
-        ChatCharacter(
-          id: 'bilbo_hobbit',
-          name: 'Bilbo Baggins',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Curious, polite, and adventurous. Shares experiences from his unexpected journey.',
-        ),
-        ChatCharacter(
-          id: 'thorin_hobbit',
-          name: 'Thorin Oakenshield',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Serious, proud, and determined. Talks about honor, dwarven culture, and reclaiming the mountain.',
-        ),
-      ],
-    ),
-    Book(
-      id: '2',
-      title: '1984',
-      author: 'George Orwell',
-      isRead: false,
-      isDownloaded: true,
-      readingProgress: 0.72,
-      releaseDate: DateTime(1949, 6, 8),
-      characters: [
-        ChatCharacter(
-          id: 'winston_1984',
-          name: 'Winston Smith',
-          lastMessageTime: DateTime.now(),
-          description:
-              'A disillusioned party member who secretly rebels against Big Brother.',
-        ),
-        ChatCharacter(
-          id: 'julia_1984',
-          name: 'Julia',
-          lastMessageTime: DateTime.now(),
-          description:
-              'A bold, pragmatic rebel who seeks freedom through small acts of defiance.',
-        ),
-      ],
-    ),
-    Book(
-      id: '3',
-      title: 'Pride and Prejudice',
-      author: 'Jane Austen',
-      isRead: true,
-      isDownloaded: true,
-      readingProgress: 1.0,
-      releaseDate: DateTime(1813, 1, 28),
-      characters: [
-        ChatCharacter(
-          id: 'elizabeth_pp',
-          name: 'Elizabeth Bennet',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Witty, intelligent, and independent. Quick to judge but open to change.',
-        ),
-        ChatCharacter(
-          id: 'darcy_pp',
-          name: 'Mr. Darcy',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Proud and reserved, but deeply honorable. Struggles to express his feelings.',
-        ),
-      ],
-    ),
-    Book(
-      id: '4',
-      title: 'To Kill a Mockingbird',
-      author: 'Harper Lee',
-      isRead: false,
-      isDownloaded: true,
-      readingProgress: 0.33,
-      releaseDate: DateTime(1960, 7, 11),
-      characters: [
-        ChatCharacter(
-          id: 'scout_tkam',
-          name: 'Scout Finch',
-          lastMessageTime: DateTime.now(),
-          description:
-              'A curious, tomboyish girl learning about justice and compassion.',
-        ),
-        ChatCharacter(
-          id: 'atticus_tkam',
-          name: 'Atticus Finch',
-          lastMessageTime: DateTime.now(),
-          description:
-              'A moral, wise lawyer who stands for justice and equality.',
-        ),
-      ],
-    ),
-    Book(
-      id: '5',
-      title: 'The Great Gatsby',
-      author: 'F. Scott Fitzgerald',
-      isRead: false,
-      isDownloaded: false,
-      readingProgress: 0.0,
-      releaseDate: DateTime(1925, 4, 10),
-      characters: [
-        ChatCharacter(
-          id: 'gatsby_gg',
-          name: 'Jay Gatsby',
-          lastMessageTime: DateTime.now(),
-          description:
-              'A mysterious millionaire obsessed with recapturing the past.',
-        ),
-        ChatCharacter(
-          id: 'nick_gg',
-          name: 'Nick Carraway',
-          lastMessageTime: DateTime.now(),
-          description:
-              'The observant narrator, caught between admiration and moral judgment.',
-        ),
-      ],
-    ),
-    Book(
-      id: '6',
-      title: 'Harry Potter and the Sorcerer\'s Stone',
-      author: 'J.K. Rowling',
-      isRead: true,
-      isDownloaded: true,
-      readingProgress: 1.0,
-      releaseDate: DateTime(1997, 6, 26),
-      characters: [
-        ChatCharacter(
-          id: 'harry_potter',
-          name: 'Harry Potter',
-          lastMessageTime: DateTime.now(),
-          description:
-              'The Boy Who Lived. Brave, loyal, and always ready for adventure.',
-        ),
-        ChatCharacter(
-          id: 'hermione_granger',
-          name: 'Hermione Granger',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Brilliant, studious, and resourceful. The brightest witch of her age.',
-        ),
-        ChatCharacter(
-          id: 'ron_weasley',
-          name: 'Ron Weasley',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Loyal, funny, and courageous. Harry\'s best friend from a wizarding family.',
-        ),
-      ],
-    ),
-    Book(
-      id: '7',
-      title: 'The Catcher in the Rye',
-      author: 'J.D. Salinger',
-      isRead: false,
-      isDownloaded: true,
-      readingProgress: 0.58,
-      releaseDate: DateTime(1951, 7, 16),
-      characters: [
-        ChatCharacter(
-          id: 'holden_caulfield',
-          name: 'Holden Caulfield',
-          lastMessageTime: DateTime.now(),
-          description:
-              'A cynical teenager from New York. Critical of society and searching for authenticity.',
-        ),
-      ],
-    ),
-    Book(
-      id: '8',
-      title: 'Lord of the Flies',
-      author: 'William Golding',
-      isRead: false,
-      isDownloaded: true,
-      readingProgress: 0.21,
-      releaseDate: DateTime(1954, 9, 17),
-      characters: [
-        ChatCharacter(
-          id: 'ralph_lotf',
-          name: 'Ralph',
-          lastMessageTime: DateTime.now(),
-          description:
-              'The elected leader who tries to maintain order and civilization.',
-        ),
-        ChatCharacter(
-          id: 'jack_lotf',
-          name: 'Jack',
-          lastMessageTime: DateTime.now(),
-          description: 'An aggressive hunter who descends into savagery.',
-        ),
-        ChatCharacter(
-          id: 'piggy_lotf',
-          name: 'Piggy',
-          lastMessageTime: DateTime.now(),
-          description:
-              'The intellectual voice of reason, often ignored by the others.',
-        ),
-      ],
-    ),
-    Book(
-      id: '9',
-      title: 'Brave New World',
-      author: 'Aldous Huxley',
-      isRead: false,
-      isDownloaded: false,
-      readingProgress: 0.0,
-      releaseDate: DateTime(1932, 1, 1),
-      characters: [
-        ChatCharacter(
-          id: 'bernard_bnw',
-          name: 'Bernard Marx',
-          lastMessageTime: DateTime.now(),
-          description:
-              'An Alpha who feels like an outsider in his perfect world.',
-        ),
-        ChatCharacter(
-          id: 'john_bnw',
-          name: 'John the Savage',
-          lastMessageTime: DateTime.now(),
-          description:
-              'An outsider raised on a reservation, struggling to fit into the World State.',
-        ),
-      ],
-    ),
-    Book(
-      id: '10',
-      title: 'The Lord of the Rings',
-      author: 'J.R.R. Tolkien',
-      isRead: false,
-      isDownloaded: true,
-      readingProgress: 0.15,
-      releaseDate: DateTime(1954, 7, 29),
-      characters: [
-        ChatCharacter(
-          id: 'frodo_lotr',
-          name: 'Frodo Baggins',
-          lastMessageTime: DateTime.now(),
-          description:
-              'The ring-bearer, burdened with the fate of Middle-earth.',
-        ),
-        ChatCharacter(
-          id: 'gandalf_lotr',
-          name: 'Gandalf',
-          lastMessageTime: DateTime.now(),
-          description: 'The wise wizard who guides the Fellowship.',
-        ),
-        ChatCharacter(
-          id: 'aragorn_lotr',
-          name: 'Aragorn',
-          lastMessageTime: DateTime.now(),
-          description:
-              'The rightful king, a ranger skilled in combat and leadership.',
-        ),
-        ChatCharacter(
-          id: 'samwise_lotr',
-          name: 'Samwise Gamgee',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Frodo\'s loyal gardener and best friend. Humble but brave.',
-        ),
-      ],
-    ),
-    Book(
-      id: '11',
-      title: 'Fahrenheit 451',
-      author: 'Ray Bradbury',
-      isRead: false,
-      isDownloaded: true,
-      readingProgress: 0.89,
-      releaseDate: DateTime(1953, 10, 19),
-      characters: [
-        ChatCharacter(
-          id: 'montag_f451',
-          name: 'Guy Montag',
-          lastMessageTime: DateTime.now(),
-          description:
-              'A fireman who begins to question his role in burning books.',
-        ),
-        ChatCharacter(
-          id: 'clarisse_f451',
-          name: 'Clarisse McClellan',
-          lastMessageTime: DateTime.now(),
-          description:
-              'A curious young girl who opens Montag\'s eyes to the world.',
-        ),
-      ],
-    ),
-    Book(
-      id: '12',
-      title: 'Jane Eyre',
-      author: 'Charlotte Brontë',
-      isRead: true,
-      isDownloaded: true,
-      readingProgress: 1.0,
-      releaseDate: DateTime(1847, 10, 16),
-      characters: [
-        ChatCharacter(
-          id: 'jane_je',
-          name: 'Jane Eyre',
-          lastMessageTime: DateTime.now(),
-          description:
-              'An independent, strong-willed governess seeking love and belonging.',
-        ),
-        ChatCharacter(
-          id: 'rochester_je',
-          name: 'Mr. Rochester',
-          lastMessageTime: DateTime.now(),
-          description:
-              'The brooding master of Thornfield Hall with a dark secret.',
-        ),
-      ],
-    ),
-    Book(
-      id: '13',
-      title: 'Moby Dick',
-      author: 'Herman Melville',
-      isRead: false,
-      isDownloaded: true,
-      readingProgress: 0.08,
-      releaseDate: DateTime(1851, 10, 18),
-      characters: [
-        ChatCharacter(
-          id: 'ishmael_md',
-          name: 'Ishmael',
-          lastMessageTime: DateTime.now(),
-          description: 'The narrator and sailor, philosophical and observant.',
-        ),
-        ChatCharacter(
-          id: 'ahab_md',
-          name: 'Captain Ahab',
-          lastMessageTime: DateTime.now(),
-          description:
-              'The obsessed captain hunting the white whale that took his leg.',
-        ),
-      ],
-    ),
-    Book(
-      id: '14',
-      title: 'The Chronicles of Narnia',
-      author: 'C.S. Lewis',
-      isRead: false,
-      isDownloaded: false,
-      readingProgress: 0.0,
-      releaseDate: DateTime(1950, 10, 16),
-      characters: [
-        ChatCharacter(
-          id: 'aslan_narnia',
-          name: 'Aslan',
-          lastMessageTime: DateTime.now(),
-          description: 'The great lion, wise and powerful, representing good.',
-        ),
-        ChatCharacter(
-          id: 'lucy_narnia',
-          name: 'Lucy Pevensie',
-          lastMessageTime: DateTime.now(),
-          description:
-              'The youngest Pevensie, kind-hearted and the first to discover Narnia.',
-        ),
-        ChatCharacter(
-          id: 'edmund_narnia',
-          name: 'Edmund Pevensie',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Initially traitorous but redeemed, learning the value of loyalty.',
-        ),
-      ],
-    ),
-    Book(
-      id: '15',
-      title: 'Wuthering Heights',
-      author: 'Emily Brontë',
-      isRead: false,
-      isDownloaded: true,
-      readingProgress: 0.42,
-      releaseDate: DateTime(1847, 12, 1),
-      characters: [
-        ChatCharacter(
-          id: 'heathcliff_wh',
-          name: 'Heathcliff',
-          lastMessageTime: DateTime.now(),
-          description:
-              'A tortured soul consumed by love, revenge, and obsession.',
-        ),
-        ChatCharacter(
-          id: 'catherine_wh',
-          name: 'Catherine Earnshaw',
-          lastMessageTime: DateTime.now(),
-          description:
-              'Wild and passionate, torn between social status and true love.',
-        ),
-      ],
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Load library when MainShell initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LibraryBloc>().add(const LoadLibrary());
+    });
+  }
 
   @override
   void dispose() {
@@ -463,14 +60,11 @@ class _MainShellState extends State<MainShell> {
       _searchController.clear();
       _searchQuery = '';
     });
-  }
 
-  void _onBookTap(Book book) {
-    debugPrint('Libro seleccionado: ${book.title}');
-  }
-
-  void _onBookActionPressed(Book book) {
-    debugPrint('Acción en libro: ${book.title}');
+    // Refresh library when switching to home tab
+    if (tab == NavTab.home) {
+      context.read<LibraryBloc>().add(const RefreshLibrary());
+    }
   }
 
   void _onPublishPressed() {
@@ -508,6 +102,19 @@ class _MainShellState extends State<MainShell> {
       case NavTab.shop:
       case NavTab.profile:
         return null;
+    }
+  }
+
+  String get _searchHintText {
+    switch (_currentTab) {
+      case NavTab.home:
+        return 'Search your library';
+      case NavTab.chat:
+        return 'Search chats';
+      case NavTab.shop:
+        return 'Search books';
+      case NavTab.profile:
+        return 'Search';
     }
   }
 
@@ -553,9 +160,9 @@ class _MainShellState extends State<MainShell> {
                               controller: _searchController,
                               onChanged: _onSearchChanged,
                               onFocusChanged: _onSearchFocusChanged,
-                              hintText: 'Search Books',
+                              hintText: _searchHintText,
                               transparentBackground: _currentTab == NavTab.shop,
-                              showPublishButton: true,
+                              showPublishButton: _currentTab == NavTab.shop,
                               onPublishPressed: _onPublishPressed,
                             ),
                           ),
@@ -583,7 +190,12 @@ class _MainShellState extends State<MainShell> {
             ),
           );
         }
-        return const SizedBox.shrink();
+
+        // Loading state
+        return Scaffold(
+          backgroundColor: colors.background,
+          body: Center(child: CircularProgressIndicator(color: colors.primary)),
+        );
       },
     );
   }
@@ -593,13 +205,7 @@ class _MainShellState extends State<MainShell> {
 
     switch (_currentTab) {
       case NavTab.home:
-        return HomeContent(
-          colors: colors,
-          books: _books,
-          searchQuery: _searchQuery,
-          onBookTap: _onBookTap,
-          onBookActionPressed: _onBookActionPressed,
-        );
+        return HomeContent(colors: colors, searchQuery: _searchQuery);
       case NavTab.chat:
         return ChatContent(colors: colors, searchQuery: _searchQuery);
       case NavTab.shop:

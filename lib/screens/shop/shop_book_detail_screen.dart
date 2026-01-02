@@ -4,20 +4,26 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../models/book.dart';
 import '../../models/chat_character.dart';
+import '../../blocs/library/bloc/library_bloc.dart';
+import '../../blocs/library/bloc/library_event.dart';
+import '../../blocs/library/bloc/library_state.dart';
+import '../../blocs/library/models/local_book_model.dart';
 import '../../widgets/common/detail_header.dart';
 import '../../widgets/book/expandable_section.dart';
 import '../../widgets/chat/chat_card.dart';
+import '../reader/pdf_reader_screen.dart';
 
-class BookDetailScreen extends StatefulWidget {
+/// Shop book detail screen - shows full book info with buy/download functionality
+class ShopBookDetailScreen extends StatefulWidget {
   final Book book;
 
-  const BookDetailScreen({super.key, required this.book});
+  const ShopBookDetailScreen({super.key, required this.book});
 
   @override
-  State<BookDetailScreen> createState() => _BookDetailScreenState();
+  State<ShopBookDetailScreen> createState() => _ShopBookDetailScreenState();
 }
 
-class _BookDetailScreenState extends State<BookDetailScreen> {
+class _ShopBookDetailScreenState extends State<ShopBookDetailScreen> {
   late Book _book;
 
   @override
@@ -27,90 +33,128 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   }
 
   void _onBuyPressed() {
-    setState(() {
-      _book = _book.copyWith(isPurchased: true);
-    });
+    if (_book.pdfUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This book is not available for download'),
+        ),
+      );
+      return;
+    }
+
+    context.read<LibraryBloc>().add(
+      PurchaseBook(
+        id: _book.id,
+        title: _book.title,
+        author: _book.author,
+        description: _book.description,
+        genres: _book.genre?.split(' / ') ?? [],
+        language: _book.originalLanguage ?? 'Unknown',
+        pages: _book.pages ?? 0,
+        price: _book.price ?? 0,
+        minAge: _book.minimumAge ?? 0,
+        publisher: _book.publisher,
+        storySetting: _book.setting,
+        pdfUrl: _book.pdfUrl!,
+        characters:
+            _book.characters
+                ?.map(
+                  (c) => LocalCharacterModel(
+                    id: c.id,
+                    name: c.name,
+                    description: c.description ?? '',
+                    avatarPath: c.avatarPath,
+                  ),
+                )
+                .toList() ??
+            [],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.watch<ThemeProvider>().colors;
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      body: Column(
-        children: [
-          // Header (solo back arrow y search icon)
-          DetailHeader(
-            colors: colors,
-            onBackPressed: () => Navigator.of(context).pop(),
-            // No character = no avatar/name shown
-          ),
+    return BlocConsumer<LibraryBloc, LibraryState>(
+      listener: (context, state) {
+        if (state.status == LibraryStatus.purchaseSuccess) {
+          setState(() {
+            _book = _book.copyWith(isPurchased: true, isDownloaded: true);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Book purchased successfully!')),
+          );
+        } else if (state.status == LibraryStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage ?? 'Purchase failed')),
+          );
+        }
+      },
+      builder: (context, libraryState) {
+        final isPurchasing = libraryState.status == LibraryStatus.purchasing;
+        final localBook = libraryState.getBook(_book.id);
+        final isPurchased = localBook != null || _book.isPurchased;
 
-          // Contenido scrolleable
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Book header card
-                  _buildBookHeader(colors),
-
-                  const SizedBox(height: 20),
-
-                  // Book stats row
-                  _buildStatsRow(colors),
-
-                  const SizedBox(height: 24),
-
-                  // Buy button
-                  _buildBuyButton(colors),
-
-                  const SizedBox(height: 24),
-
-                  // Characters available to chat (expandable) - show if book has AI characters
-                  if (_book.aiCharactersCount != null &&
-                      _book.aiCharactersCount! > 0)
-                    ExpandableSection(
-                      title: 'Characters available to chat',
-                      colors: colors,
-                      initiallyExpanded: false,
-                      previewContent:
-                          const SizedBox.shrink(), // Nothing shown when collapsed
-                      content: _buildCharactersContent(colors),
-                    ),
-
-                  if (_book.aiCharactersCount != null &&
-                      _book.aiCharactersCount! > 0)
-                    const SizedBox(height: 8),
-
-                  // About this book (expandable)
-                  ExpandableSection(
-                    title: 'About this book',
-                    colors: colors,
-                    initiallyExpanded: false,
-                    previewContent: _buildAboutPreview(colors),
-                    content: _buildAboutContent(colors),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // More details (expandable)
-                  ExpandableSection(
-                    title: 'More details',
-                    colors: colors,
-                    initiallyExpanded: false,
-                    previewContent: _buildDetailsPreview(colors),
-                    content: _buildDetailsContent(colors),
-                  ),
-
-                  const SizedBox(height: 32),
-                ],
+        return Scaffold(
+          backgroundColor: colors.background,
+          body: Column(
+            children: [
+              DetailHeader(
+                colors: colors,
+                onBackPressed: () => Navigator.of(context).pop(),
               ),
-            ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildBookHeader(colors),
+                      const SizedBox(height: 20),
+                      _buildStatsRow(colors),
+                      const SizedBox(height: 24),
+                      _buildActionButton(
+                        colors,
+                        isPurchased,
+                        isPurchasing,
+                        localBook,
+                      ),
+                      const SizedBox(height: 24),
+                      if (_book.aiCharactersCount != null &&
+                          _book.aiCharactersCount! > 0) ...[
+                        ExpandableSection(
+                          title: 'Characters available to chat',
+                          colors: colors,
+                          initiallyExpanded: false,
+                          previewContent: const SizedBox.shrink(),
+                          content: _buildCharactersContent(colors),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      ExpandableSection(
+                        title: 'About this book',
+                        colors: colors,
+                        initiallyExpanded: false,
+                        previewContent: _buildAboutPreview(colors),
+                        content: _buildAboutContent(colors),
+                      ),
+                      const SizedBox(height: 8),
+                      ExpandableSection(
+                        title: 'More details',
+                        colors: colors,
+                        initiallyExpanded: false,
+                        previewContent: _buildDetailsPreview(colors),
+                        content: _buildDetailsContent(colors),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -120,7 +164,6 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Book cover
           Container(
             width: 120,
             height: 170,
@@ -129,31 +172,20 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: colors.border, width: 1),
             ),
-            child:
-                _book.coverImagePath != null
-                    ? ClipRRect(
-                      borderRadius: BorderRadius.circular(7),
-                      child: Image.asset(
-                        _book.coverImagePath!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildPlaceholderCover(colors);
-                        },
-                      ),
-                    )
-                    : _buildPlaceholderCover(colors),
+            child: Center(
+              child: Icon(
+                Icons.menu_book_outlined,
+                size: 48,
+                color: colors.iconDefault,
+              ),
+            ),
           ),
-
           const SizedBox(width: 20),
-
-          // Book info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 8),
-
-                // Title
                 Text(
                   _book.title,
                   style: TextStyle(
@@ -162,18 +194,12 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                     color: colors.textPrimary,
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
-                // Author
                 Text(
                   _book.author,
                   style: TextStyle(fontSize: 16, color: colors.textSecondary),
                 ),
-
                 const SizedBox(height: 4),
-
-                // Release date
                 Text(
                   'Released ${_book.releaseDateFormatted}',
                   style: TextStyle(fontSize: 14, color: colors.textSecondary),
@@ -186,44 +212,25 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     );
   }
 
-  Widget _buildPlaceholderCover(AppThemeColors colors) {
-    return Center(
-      child: Icon(
-        Icons.menu_book_outlined,
-        size: 48,
-        color: colors.iconDefault,
-      ),
-    );
-  }
-
   Widget _buildStatsRow(AppThemeColors colors) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Pages
           _buildStatItem(
             value: _book.pages?.toString() ?? '—',
             label: 'Pages',
             colors: colors,
           ),
-
-          // Divider
           Container(height: 40, width: 1, color: colors.border),
-
-          // AI Characters
           _buildStatItem(
             value: _book.aiCharactersCount?.toString() ?? '0',
             label: 'AI Characters',
             colors: colors,
             icon: Icons.auto_awesome,
           ),
-
-          // Divider
           Container(height: 40, width: 1, color: colors.border),
-
-          // Age
           _buildStatItem(value: _book.ageText, label: 'Age', colors: colors),
         ],
       ),
@@ -264,9 +271,12 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     );
   }
 
-  Widget _buildBuyButton(AppThemeColors colors) {
-    final isPurchased = _book.isPurchased;
-
+  Widget _buildActionButton(
+    AppThemeColors colors,
+    bool isPurchased,
+    bool isPurchasing,
+    LocalBookModel? localBook,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: SizedBox(
@@ -276,21 +286,20 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           borderRadius: BorderRadius.circular(24),
           child: InkWell(
             onTap:
-                isPurchased
+                isPurchasing
+                    ? null
+                    : isPurchased
                     ? () {
-                      debugPrint('Go to book: ${_book.title}');
-                      // TODO: Navigate to book reader
+                      if (localBook != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => PdfReaderScreen(book: localBook),
+                          ),
+                        );
+                      }
                     }
                     : _onBuyPressed,
             borderRadius: BorderRadius.circular(24),
-            splashColor:
-                isPurchased
-                    ? colors.primary.withOpacity(0.1)
-                    : Colors.white.withOpacity(0.2),
-            highlightColor:
-                isPurchased
-                    ? colors.primary.withOpacity(0.05)
-                    : Colors.white.withOpacity(0.1),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration:
@@ -301,14 +310,25 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                       )
                       : null,
               child: Center(
-                child: Text(
-                  isPurchased ? 'Go to Book' : 'Buy ${_book.priceText}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isPurchased ? colors.textPrimary : Colors.white,
-                  ),
-                ),
+                child:
+                    isPurchasing
+                        ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : Text(
+                          isPurchased ? 'Read' : 'Buy ${_book.priceText}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color:
+                                isPurchased ? colors.textPrimary : Colors.white,
+                          ),
+                        ),
               ),
             ),
           ),
@@ -318,44 +338,19 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   }
 
   Widget _buildCharactersContent(AppThemeColors colors) {
-    // Use existing characters or generate placeholders based on aiCharactersCount
-    List<ChatCharacter> characters;
-
-    if (_book.characters != null && _book.characters!.isNotEmpty) {
-      characters = _book.characters!;
-    } else {
-      // Generate placeholder characters based on aiCharactersCount
-      final count = _book.aiCharactersCount ?? 0;
-      characters = List.generate(
-        count,
-        (index) => ChatCharacter(
-          id: 'placeholder_$index',
-          name: 'Character ${index + 1}',
-          lastMessageTime: DateTime.now(),
-          description:
-              'An AI character from "${_book.title}" available to chat with.',
-        ),
-      );
-    }
-
-    if (characters.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
+    final characters = _book.characters ?? [];
+    if (characters.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Column(
         children:
             characters
                 .map(
-                  (character) => ChatCard(
-                    character: character,
+                  (c) => ChatCard(
+                    character: c,
                     colors: colors,
                     mode: ChatCardMode.bookPreview,
-                    onTap: () {
-                      debugPrint('Character tapped: ${character.name}');
-                      // TODO: Could show more info or start chat if purchased
-                    },
+                    onTap: () {},
                   ),
                 )
                 .toList(),
@@ -364,11 +359,10 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   }
 
   Widget _buildAboutPreview(AppThemeColors colors) {
-    final description = _book.description ?? 'No description available.';
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
-        description,
+        _book.description ?? 'No description available.',
         style: TextStyle(
           fontSize: 15,
           color: colors.textSecondary,
@@ -396,65 +390,44 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
 
   List<MapEntry<String, String>> _getDetailsList() {
     final details = <MapEntry<String, String>>[];
-
     details.add(MapEntry('Title', _book.title));
     details.add(MapEntry('Author', _book.author));
-
-    if (_book.originalLanguage != null) {
+    if (_book.originalLanguage != null)
       details.add(MapEntry('Original Language', _book.originalLanguage!));
-    }
-    if (_book.genre != null) {
-      details.add(MapEntry('Genre', _book.genre!));
-    }
-    if (_book.releaseDate != null) {
+    if (_book.genre != null) details.add(MapEntry('Genre', _book.genre!));
+    if (_book.releaseDate != null)
       details.add(MapEntry('Publication Date', _book.releaseDateFull));
-    }
-    if (_book.pages != null) {
-      details.add(MapEntry('Pages', '~${_book.pages} (varies by edition)'));
-    }
-    if (_book.publisher != null) {
-      details.add(MapEntry('Publisher (original)', _book.publisher!));
-    }
-    if (_book.minimumAge != null) {
-      details.add(MapEntry('Target Age', '${_book.ageText} (All Ages)'));
-    }
-    if (_book.setting != null) {
-      details.add(MapEntry('Setting', _book.setting!));
-    }
-
+    if (_book.pages != null) details.add(MapEntry('Pages', '~${_book.pages}'));
+    if (_book.publisher != null)
+      details.add(MapEntry('Publisher', _book.publisher!));
+    if (_book.minimumAge != null)
+      details.add(MapEntry('Target Age', _book.ageText));
+    if (_book.setting != null) details.add(MapEntry('Setting', _book.setting!));
     return details;
   }
 
   Widget _buildDetailsPreview(AppThemeColors colors) {
-    final details = _getDetailsList();
-    final previewDetails = details.take(3).toList();
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children:
-            previewDetails
-                .map(
-                  (detail) => _buildDetailRow(detail.key, detail.value, colors),
-                )
+            _getDetailsList()
+                .take(3)
+                .map((d) => _buildDetailRow(d.key, d.value, colors))
                 .toList(),
       ),
     );
   }
 
   Widget _buildDetailsContent(AppThemeColors colors) {
-    final details = _getDetailsList();
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children:
-            details
-                .map(
-                  (detail) => _buildDetailRow(detail.key, detail.value, colors),
-                )
+            _getDetailsList()
+                .map((d) => _buildDetailRow(d.key, d.value, colors))
                 .toList(),
       ),
     );
