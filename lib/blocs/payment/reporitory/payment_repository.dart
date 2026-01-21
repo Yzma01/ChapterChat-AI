@@ -46,6 +46,8 @@ class PaymentRepository {
         bookId: book.id,
         lastFourDigits: int.parse(card.cardNumber.substring(card.length - 4)),
         paymentId: id,
+        amount: book.price!,
+        date: DateTime.now(),
         userId: uid,
       );
       _firestore.collection("transactions").add(transaction.toMap());
