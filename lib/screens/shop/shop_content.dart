@@ -73,7 +73,7 @@ class _ShopContentState extends State<ShopContent> {
       characters:
           model.characters?.map((c) {
             return ChatCharacter(
-              id: c.name.toLowerCase().replaceAll(' ', '_'),
+              id: '${model.id}_${c.name.toLowerCase().replaceAll(' ', '_')}',
               name: c.name,
               lastMessageTime: DateTime.now(),
               description: c.description,
@@ -171,6 +171,24 @@ class _ShopContentState extends State<ShopContent> {
         if (state is BookLoaded) {
           // Convertir los modelos a objetos Book
           final allBooks = state.books.map(bookFromModel).toList();
+          for (final book in allBooks) {
+            debugPrint('📘 BOOK =====================');
+            debugPrint('ID: ${book.id}');
+            debugPrint('Title: ${book.title}');
+
+            if (book.characters == null || book.characters!.isEmpty) {
+              debugPrint('❌ No characters');
+              continue;
+            }
+
+            for (final c in book.characters!) {
+              debugPrint('  👤 CHARACTER -------------');
+              debugPrint('  ID: ${c.id}');
+              debugPrint('  Name: ${c.name}');
+              debugPrint('  Description: ${c.description}');
+              debugPrint('  Last message: ${c.lastMessageTime}');
+            }
+          }
 
           // Aplicar el filtro de búsqueda
           final filteredBooks = getFilteredBooks(allBooks);

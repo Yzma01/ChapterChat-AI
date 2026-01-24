@@ -26,6 +26,14 @@ class BookDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('Building BookDetailScreen for book id: ${book.id}');
+    debugPrint('Book title: ${book.title}');
+    debugPrint('Number of characters: ${book.characters?.length ?? 0}');
+    debugPrint(
+      book.characters
+          ?.map((c) => 'Character id: ${c.id}, name: ${c.name}')
+          .join(', '),
+    );
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
