@@ -9,6 +9,15 @@ class PaymentInitial extends PaymentState {}
 
 class PaymentLoading extends PaymentState {}
 
+class BookPurchaseSuccess extends PaymentState {
+  final String bookId;
+  final String confirmationMessage = "Book purchased successfully.";
+
+  BookPurchaseSuccess(this.bookId);
+  @override
+  List<Object?> get props => [bookId, confirmationMessage];
+}
+
 class PaymentFailure extends PaymentState {
   final String error;
 

@@ -29,6 +29,10 @@ class UserModel {
     return membershipDueDate!.isAfter(DateTime.now());
   }
 
+  bool get isWritter {
+    return role == 'writer';
+  }
+
   factory UserModel.fromFirestore(Map<String, dynamic> data) {
     return UserModel(
       uid: data['uid'],

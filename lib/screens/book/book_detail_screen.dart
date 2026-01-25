@@ -57,6 +57,8 @@ class BookDetailScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       _buildReadingProgress(),
                     ],
+                    !isPremium ? SizedBox(height: 24) : const SizedBox.shrink(),
+                    ads.getNativeWidget(isPremium),
                     const SizedBox(height: 32),
                     if (book.characters != null &&
                         book.characters!.isNotEmpty) ...[
@@ -81,8 +83,6 @@ class BookDetailScreen extends StatelessWidget {
                       ),
                     ],
 
-                    !isPremium ? SizedBox(height: 24) : const SizedBox.shrink(),
-                    ads.getNativeWidget(isPremium),
                     const SizedBox(height: 24),
                   ],
                 ),

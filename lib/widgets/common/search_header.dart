@@ -1,4 +1,6 @@
+import 'package:chapter_chat_ai/core/user/user_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
 
 class SearchHeader extends StatefulWidget {
@@ -65,6 +67,7 @@ class _SearchHeaderState extends State<SearchHeader> {
 
   @override
   Widget build(BuildContext context) {
+    final isWritter = context.read<UserProvider>().user!.isWritter;
     return PopScope(
       canPop: !_isFocused,
       onPopInvokedWithResult: (didPop, result) {
@@ -143,7 +146,7 @@ class _SearchHeaderState extends State<SearchHeader> {
             ),
 
             // Publish button (visible when not focused and showPublishButton is true)
-            if (widget.showPublishButton && !_isFocused)
+            if (widget.showPublishButton && !_isFocused && !isWritter)
               GestureDetector(
                 onTap: widget.onPublishPressed,
                 child: Container(

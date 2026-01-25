@@ -78,7 +78,7 @@ class AdProvider extends ChangeNotifier {
       adUnitId: _nativeAdUnitId,
       request: AdRequest(),
       nativeTemplateStyle: NativeTemplateStyle(
-        templateType: TemplateType.medium,
+        templateType: TemplateType.small,
       ),
       listener: NativeAdListener(
         onAdLoaded: (Ad ad) {
@@ -153,7 +153,7 @@ class AdProvider extends ChangeNotifier {
       return const SizedBox.shrink();
     }
 
-    return SizedBox(height: 320, child: AdWidget(ad: _nativeAd!));
+    return SizedBox(height: 80, child: AdWidget(ad: _nativeAd!));
   }
 
   //Dispose ads

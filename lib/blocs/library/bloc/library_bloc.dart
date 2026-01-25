@@ -117,16 +117,14 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
     DeleteBook event,
     Emitter<LibraryState> emit,
   ) async {
+    emit(state.copyWith(status: LibraryStatus.loading));
+
     try {
       await _storage.deleteBook(event.bookId);
-
-      // Reload library
       final books = await _storage.getAllBooks();
-      emit(state.copyWith(status: LibraryStatus.loaded, books: books));
 
-      debugPrint('🗑️ Book deleted: ${event.bookId}');
+      emit(state.copyWith(status: LibraryStatus.loaded, books: books));
     } catch (e) {
-      debugPrint('❌ Error deleting book: $e');
       emit(
         state.copyWith(status: LibraryStatus.error, errorMessage: e.toString()),
       );

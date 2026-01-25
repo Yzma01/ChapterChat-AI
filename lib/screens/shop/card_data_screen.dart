@@ -1,3 +1,6 @@
+import 'package:chapter_chat_ai/blocs/library/bloc/library_bloc.dart';
+import 'package:chapter_chat_ai/blocs/library/bloc/library_event.dart';
+import 'package:chapter_chat_ai/blocs/library/models/local_book_model.dart';
 import 'package:chapter_chat_ai/blocs/payment/bloc/payment_bloc.dart';
 import 'package:chapter_chat_ai/blocs/payment/bloc/payment_event.dart';
 import 'package:chapter_chat_ai/blocs/payment/bloc/payment_state.dart';
@@ -128,7 +131,43 @@ class _CardInputBottomSheetState extends State<CardInputBottomSheet> {
 
     return BlocListener<PaymentBloc, PaymentState>(
       listener: (context, state) {
-        debugPrint('Payment state: $state'); // Agrega esto
+        if (state is BookPurchaseSuccess) {
+          final _book = widget.book!;
+          context.read<LibraryBloc>().add(
+            PurchaseBook(
+              id: _book.id,
+              title: _book.title,
+              author: _book.author,
+              description: _book.description,
+              genres: _book.genre?.split(' / ') ?? [],
+              language: _book.originalLanguage ?? 'Unknown',
+              pages: _book.pages ?? 0,
+              price: _book.price ?? 0,
+              minAge: _book.minimumAge ?? 0,
+              publisher: _book.publisher,
+              storySetting: _book.setting,
+              pdfUrl: _book.pdfUrl!,
+              characters:
+                  _book.characters
+                      ?.map(
+                        (c) => LocalCharacterModel(
+                          id: c.id,
+                          name: c.name,
+                          description: c.description ?? '',
+                          avatarPath: c.avatarPath,
+                        ),
+                      )
+                      .toList() ??
+                  [],
+            ),
+          );
+          Navigator.of(context, rootNavigator: true).pop();
+
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.confirmationMessage)));
+          Navigator.pop(context);
+        }
 
         if (state is PaymentLoading) {
           debugPrint('Showing loading dialog'); // Y esto

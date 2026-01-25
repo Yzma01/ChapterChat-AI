@@ -48,35 +48,6 @@ class _ShopBookDetailScreenState extends State<ShopBookDetailScreen> {
       );
       return;
     }
-
-    context.read<LibraryBloc>().add(
-      PurchaseBook(
-        id: _book.id,
-        title: _book.title,
-        author: _book.author,
-        description: _book.description,
-        genres: _book.genre?.split(' / ') ?? [],
-        language: _book.originalLanguage ?? 'Unknown',
-        pages: _book.pages ?? 0,
-        price: _book.price ?? 0,
-        minAge: _book.minimumAge ?? 0,
-        publisher: _book.publisher,
-        storySetting: _book.setting,
-        pdfUrl: _book.pdfUrl!,
-        characters:
-            _book.characters
-                ?.map(
-                  (c) => LocalCharacterModel(
-                    id: c.id,
-                    name: c.name,
-                    description: c.description ?? '',
-                    avatarPath: c.avatarPath,
-                  ),
-                )
-                .toList() ??
-            [],
-      ),
-    );
   }
 
   @override
@@ -408,21 +379,28 @@ class _ShopBookDetailScreenState extends State<ShopBookDetailScreen> {
     final details = <MapEntry<String, String>>[];
     details.add(MapEntry('Title', _book.title));
     details.add(MapEntry('Author', _book.author));
-    if (_book.originalLanguage != null && _book.originalLanguage != '')
+    if (_book.originalLanguage != null && _book.originalLanguage != '') {
       details.add(MapEntry('Original Language', _book.originalLanguage!));
-    if (_book.genre != null && _book.genre != '')
+    }
+    if (_book.genre != null && _book.genre != '') {
       details.add(MapEntry('Genre', _book.genre!));
-    if (_book.releaseDate != null && _book.releaseDate != '')
+    }
+    if (_book.releaseDate != null && _book.releaseDate != '') {
       details.add(MapEntry('Publication Date', _book.releaseDateFull));
-    if (_book.pages != null && _book.pages != 0)
+    }
+    if (_book.pages != null && _book.pages != 0) {
       details.add(MapEntry('Pages', '~${_book.pages}'));
-    if (_book.publisher != null && _book.publisher != '')
+    }
+    if (_book.publisher != null && _book.publisher != '') {
       details.add(MapEntry('Publisher', _book.publisher!));
-    if (_book.minimumAge != null && _book.minimumAge! > 0)
+    }
+    if (_book.minimumAge != null && _book.minimumAge! > 0) {
       details.add(MapEntry('Target Age', _book.ageText));
+    }
     debugPrint('Book Setting: ${_book.setting}');
-    if (_book.setting != null && _book.setting != '')
+    if (_book.setting != null && _book.setting != '') {
       details.add(MapEntry('Setting', _book.setting!));
+    }
     return details;
   }
 

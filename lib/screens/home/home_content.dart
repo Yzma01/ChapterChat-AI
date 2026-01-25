@@ -196,6 +196,7 @@ class _HomeContentState extends State<HomeContent> {
 
   void _showDeleteConfirmation(BuildContext context, LocalBookModel localBook) {
     final colors = widget.colors;
+    final libraryBloc = context.read<LibraryBloc>();
 
     showDialog(
       context: context,
@@ -221,9 +222,7 @@ class _HomeContentState extends State<HomeContent> {
               TextButton(
                 onPressed: () {
                   Navigator.pop(dialogContext);
-                  context.read<LibraryBloc>().add(
-                    DeleteBook(bookId: localBook.id),
-                  );
+                  libraryBloc.add(DeleteBook(bookId: localBook.id));
                 },
                 child: Text('Remove', style: TextStyle(color: colors.error)),
               ),

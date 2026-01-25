@@ -79,9 +79,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
           event.book,
           event.card,
         );
-        emit(
-          PaymentSuccess(confirmationMessage: "Book purchased successfully."),
-        );
+        emit(BookPurchaseSuccess(event.book.id));
       } else {
         emit(PaymentFailure(error: getErrorMessage(payment.code)));
       }
