@@ -20,6 +20,19 @@ class UserRepository {
       throw Exception('User profile does not exist');
     }
 
-    return UserModel.fromFirestore(doc.data()!);
+    UserModel userModel = UserModel.fromFirestore(doc.data()!);
+
+    if (userModel.membership == 'premium' &&
+        userModel.membershipDueDate != null &&
+        userModel.membershipDueDate!.isBefore(DateTime.now())) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'membership': 'free', 'membershipDueDate': null},
+      );
+      final refreshedDoc =
+          await _firestore.collection('users').doc(user.uid).get();
+
+      userModel = UserModel.fromFirestore(refreshedDoc.data()!);
+    }
+    return userModel;
   }
 }

@@ -55,6 +55,7 @@ dependencies:
   flutter_dotenv: ^6.0.0
   image_picker: ^1.2.1
   file_picker: ^8.0.0
+  google_mobile_ads: ^7.0.0
 
 dev_dependencies:
   flutter_test:

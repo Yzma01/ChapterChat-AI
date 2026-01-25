@@ -1,3 +1,4 @@
+import 'package:chapter_chat_ai/blocs/user/models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthRepository {
@@ -14,6 +15,7 @@ class AuthRepository {
       rethrow;
     }
   }
+
   Future<void> logout() async {
     await _auth.signOut();
   }

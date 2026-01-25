@@ -1,6 +1,7 @@
 import 'package:chapter_chat_ai/blocs/payment/bloc/payment_bloc.dart';
 import 'package:chapter_chat_ai/blocs/payment/reporitory/payment_repository.dart';
 import 'package:chapter_chat_ai/blocs/user/bloc/user_state.dart';
+import 'package:chapter_chat_ai/core/ads/ad_provider.dart';
 import 'package:chapter_chat_ai/core/user/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -32,6 +34,9 @@ import 'screens/main_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize the Mobile Ads SDK.
+  MobileAds.instance.initialize();
 
   // ============================================================
   // FIREBASE INITIALIZATION
@@ -66,6 +71,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => AdProvider()),
       ],
       child: MultiBlocProvider(
         providers: [

@@ -1,3 +1,4 @@
+import 'package:chapter_chat_ai/core/ads/ad_provider.dart';
 import 'package:chapter_chat_ai/core/user/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,6 +28,7 @@ class _MainShellState extends State<MainShell> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isSearchFocused = false;
+  bool _adsInitialized = false;
 
   @override
   void initState() {
@@ -35,6 +37,24 @@ class _MainShellState extends State<MainShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LibraryBloc>().add(const LoadLibrary());
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_adsInitialized) {
+      final ads = context.read<AdProvider>();
+      final isPremium = context.read<UserProvider>().user?.isPremium ?? false;
+
+      if (!isPremium) {
+        ads.loadBannerAd();
+        ads.loadRewardedAd();
+        ads.loadNativeAd();
+      }
+
+      _adsInitialized = true;
+    }
   }
 
   @override

@@ -1,7 +1,10 @@
 import 'package:chapter_chat_ai/blocs/payment/models/card_data_model.dart';
+import 'package:chapter_chat_ai/core/ads/ad_provider.dart';
+import 'package:chapter_chat_ai/core/user/user_provider.dart';
 import 'package:chapter_chat_ai/screens/shop/card_data_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../models/book.dart';
@@ -79,6 +82,8 @@ class _ShopBookDetailScreenState extends State<ShopBookDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.watch<ThemeProvider>().colors;
+    final isPremium = context.watch<UserProvider>().user!.isPremium;
+    final ads = context.watch<AdProvider>();
 
     return BlocConsumer<LibraryBloc, LibraryState>(
       listener: (context, state) {
@@ -98,62 +103,71 @@ class _ShopBookDetailScreenState extends State<ShopBookDetailScreen> {
         final localBook = libraryState.getBook(_book.id);
         final isPurchased = localBook != null || _book.isPurchased;
 
-        return Scaffold(
-          backgroundColor: colors.background,
-          body: Column(
-            children: [
-              DetailHeader(
-                colors: colors,
-                onBackPressed: () => Navigator.of(context).pop(),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildBookHeader(colors),
-                      const SizedBox(height: 20),
-                      _buildStatsRow(colors),
-                      const SizedBox(height: 24),
-                      _buildActionButton(
-                        colors,
-                        isPurchased,
-                        isPurchasing,
-                        localBook,
-                      ),
-                      const SizedBox(height: 24),
-                      if (_book.aiCharactersCount != null &&
-                          _book.aiCharactersCount! > 0) ...[
+        return SafeArea(
+          child: Scaffold(
+            backgroundColor: colors.background,
+            body: Column(
+              children: [
+                DetailHeader(
+                  colors: colors,
+                  onBackPressed: () => Navigator.of(context).pop(),
+                ),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildBookHeader(colors),
+                        const SizedBox(height: 20),
+                        _buildStatsRow(colors),
+                        const SizedBox(height: 24),
+
+                        _buildActionButton(
+                          colors,
+                          isPurchased,
+                          isPurchasing,
+                          localBook,
+                        ),
+
+                        !isPremium
+                            ? SizedBox(height: 24)
+                            : const SizedBox.shrink(),
+                        ads.getBannerWidget(isPremium),
+                        const SizedBox(height: 24),
+                        if (_book.aiCharactersCount != null &&
+                            _book.aiCharactersCount! > 0) ...[
+                          ExpandableSection(
+                            title: 'Characters available to chat',
+                            colors: colors,
+                            initiallyExpanded: false,
+                            previewContent: const SizedBox.shrink(),
+                            content: _buildCharactersContent(colors),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
                         ExpandableSection(
-                          title: 'Characters available to chat',
+                          title: 'About this book',
                           colors: colors,
                           initiallyExpanded: false,
-                          previewContent: const SizedBox.shrink(),
-                          content: _buildCharactersContent(colors),
+                          previewContent: _buildAboutPreview(colors),
+                          content: _buildAboutContent(colors),
                         ),
                         const SizedBox(height: 8),
+                        ExpandableSection(
+                          title: 'More details',
+                          colors: colors,
+                          initiallyExpanded: false,
+                          previewContent: _buildDetailsPreview(colors),
+                          content: _buildDetailsContent(colors),
+                        ),
+                        const SizedBox(height: 32),
                       ],
-                      ExpandableSection(
-                        title: 'About this book',
-                        colors: colors,
-                        initiallyExpanded: false,
-                        previewContent: _buildAboutPreview(colors),
-                        content: _buildAboutContent(colors),
-                      ),
-                      const SizedBox(height: 8),
-                      ExpandableSection(
-                        title: 'More details',
-                        colors: colors,
-                        initiallyExpanded: false,
-                        previewContent: _buildDetailsPreview(colors),
-                        content: _buildDetailsContent(colors),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -394,17 +408,21 @@ class _ShopBookDetailScreenState extends State<ShopBookDetailScreen> {
     final details = <MapEntry<String, String>>[];
     details.add(MapEntry('Title', _book.title));
     details.add(MapEntry('Author', _book.author));
-    if (_book.originalLanguage != null)
+    if (_book.originalLanguage != null && _book.originalLanguage != '')
       details.add(MapEntry('Original Language', _book.originalLanguage!));
-    if (_book.genre != null) details.add(MapEntry('Genre', _book.genre!));
-    if (_book.releaseDate != null)
+    if (_book.genre != null && _book.genre != '')
+      details.add(MapEntry('Genre', _book.genre!));
+    if (_book.releaseDate != null && _book.releaseDate != '')
       details.add(MapEntry('Publication Date', _book.releaseDateFull));
-    if (_book.pages != null) details.add(MapEntry('Pages', '~${_book.pages}'));
-    if (_book.publisher != null)
+    if (_book.pages != null && _book.pages != 0)
+      details.add(MapEntry('Pages', '~${_book.pages}'));
+    if (_book.publisher != null && _book.publisher != '')
       details.add(MapEntry('Publisher', _book.publisher!));
-    if (_book.minimumAge != null)
+    if (_book.minimumAge != null && _book.minimumAge! > 0)
       details.add(MapEntry('Target Age', _book.ageText));
-    if (_book.setting != null) details.add(MapEntry('Setting', _book.setting!));
+    debugPrint('Book Setting: ${_book.setting}');
+    if (_book.setting != null && _book.setting != '')
+      details.add(MapEntry('Setting', _book.setting!));
     return details;
   }
 

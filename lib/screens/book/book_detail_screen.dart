@@ -1,3 +1,5 @@
+import 'package:chapter_chat_ai/core/ads/ad_provider.dart';
+import 'package:chapter_chat_ai/core/user/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/app_colors.dart';
@@ -26,6 +28,8 @@ class BookDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ads = context.read<AdProvider>();
+    final bool isPremium = context.read<UserProvider>().user!.isPremium;
     debugPrint('Building BookDetailScreen for book id: ${book.id}');
     debugPrint('Book title: ${book.title}');
     debugPrint('Number of characters: ${book.characters?.length ?? 0}');
@@ -76,6 +80,9 @@ class BookDetailScreen extends StatelessWidget {
                         ),
                       ),
                     ],
+
+                    !isPremium ? SizedBox(height: 24) : const SizedBox.shrink(),
+                    ads.getNativeWidget(isPremium),
                     const SizedBox(height: 24),
                   ],
                 ),

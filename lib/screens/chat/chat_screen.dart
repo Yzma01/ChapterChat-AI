@@ -1,6 +1,10 @@
 import 'dart:typed_data';
+import 'package:chapter_chat_ai/core/ads/ad_provider.dart';
+import 'package:chapter_chat_ai/core/theme/theme_provider.dart';
+import 'package:chapter_chat_ai/core/user/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../blocs/chat/bloc/chat_bloc.dart';
 import '../../blocs/chat/bloc/chat_event.dart';
 import '../../blocs/chat/bloc/chat_state.dart';
@@ -28,23 +32,36 @@ class ChatScreen extends StatelessWidget {
   }
 }
 
-class _ChatScreenContent extends StatelessWidget {
+class _ChatScreenContent extends StatefulWidget {
   final ChatCharacter character;
   final AppThemeColors colors;
 
   const _ChatScreenContent({required this.character, required this.colors});
 
   @override
+  State<_ChatScreenContent> createState() => _ChatScreenContentState();
+}
+
+class _ChatScreenContentState extends State<_ChatScreenContent> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isPremium = context.watch<UserProvider>().user!.isPremium;
+    final ads = context.watch<AdProvider>();
+
     return Scaffold(
-      backgroundColor: colors.background,
+      backgroundColor: widget.colors.background,
       resizeToAvoidBottomInset: true,
       body: Column(
         children: [
           // Header
           DetailHeader(
-            colors: colors,
-            character: character,
+            colors: widget.colors,
+            character: widget.character,
             onBackPressed: () => Navigator.of(context).pop(),
           ),
 
@@ -55,7 +72,7 @@ class _ChatScreenContent extends StatelessWidget {
               final (isRateLimited, seconds) = data;
               if (!isRateLimited) return const SizedBox.shrink();
               return ChatRateLimitBanner(
-                colors: colors,
+                colors: widget.colors,
                 secondsRemaining: seconds,
               );
             },
@@ -76,18 +93,34 @@ class _ChatScreenContent extends StatelessWidget {
           // Input bar
           BlocBuilder<ChatBloc, ChatState>(
             builder: (context, state) {
-              return ChatInputBar(
-                colors: colors,
-                onSendText: (text) {
-                  context.read<ChatBloc>().add(ChatSendTextMessage(text: text));
-                },
-                onSendImage: (bytes, caption) {
-                  context.read<ChatBloc>().add(
-                    ChatSendImageMessage(imageBytes: bytes, caption: caption),
-                  );
-                },
-                enabled: state.canSendMessage,
-                hintText: state.getInputHint(),
+              return SafeArea(
+                child: Column(
+                  children: [
+                    ChatInputBar(
+                      colors: widget.colors,
+                      onSendText: (text) {
+                        ads.getRewardedWidget(isPremium, () {
+                          context.read<ChatBloc>().add(
+                            ChatSendTextMessage(text: text),
+                          );
+                        });
+                      },
+                      onSendImage: (bytes, caption) {
+                        ads.getRewardedWidget(isPremium, () {
+                          context.read<ChatBloc>().add(
+                            ChatSendImageMessage(
+                              imageBytes: bytes,
+                              caption: caption,
+                            ),
+                          );
+                        });
+                      },
+                      enabled: state.canSendMessage,
+                      hintText: state.getInputHint(),
+                    ),
+                    ads.getBannerWidget(isPremium),
+                  ],
+                ),
               );
             },
           ),
@@ -98,19 +131,23 @@ class _ChatScreenContent extends StatelessWidget {
 
   Widget _buildMessagesList(BuildContext context, ChatState state) {
     if (state.status == ChatStatus.loading) {
-      return Center(child: CircularProgressIndicator(color: colors.primary));
+      return Center(
+        child: CircularProgressIndicator(color: widget.colors.primary),
+      );
     }
 
     final List<Widget> chatItems = [];
 
     // Typing indicator (shown at bottom when reversed)
     if (state.isTyping && !state.isRateLimited) {
-      chatItems.add(ChatTypingIndicator(colors: colors));
+      chatItems.add(ChatTypingIndicator(colors: widget.colors));
     }
 
     // Messages (reversed for bottom-up display)
     for (int i = state.messages.length - 1; i >= 0; i--) {
-      chatItems.add(MessageBubble(message: state.messages[i], colors: colors));
+      chatItems.add(
+        MessageBubble(message: state.messages[i], colors: widget.colors),
+      );
     }
 
     return ListView.builder(
