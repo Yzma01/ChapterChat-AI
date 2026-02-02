@@ -48,4 +48,25 @@ class UserRepository {
       'membershipDueDate': null,
     });
   }
+
+  Future<void> sendVerificationEmail() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception('No authenticated user');
+    }
+
+    await user.sendEmailVerification();
+  }
+
+  Future<bool> isEmailVerified() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception('No authenticated user');
+    }
+
+    await user.reload(); // 🔴 CLAVE
+    return user.emailVerified;
+  }
 }

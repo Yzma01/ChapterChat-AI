@@ -29,5 +29,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(ProfileError(e.toString()));
       }
     });
+    on<SendEmailVerification>((event, emit) async {
+      try {
+        await repo.sendVerificationEmail();
+      } catch (e) {
+        emit(ProfileError(e.toString()));
+      }
+    });
   }
 }

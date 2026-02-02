@@ -23,6 +23,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       await authRepository.login(event.email, event.password);
+      final isVerify = await userRepository.isEmailVerified();
+      if (!isVerify) {
+        await authRepository.logout();
+        emit(
+          AuthFailure(
+            error:
+                "Email not verified. Please verify your email. Check your spam folder if you don't see it in your inbox.",
+          ),
+        );
+        return;
+      }
       // Load profile here
       final user = await userRepository.getProfile();
 

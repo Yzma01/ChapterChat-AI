@@ -51,7 +51,7 @@ class _LogginScreenState extends State<LogginScreen> {
 
           if (state is AuthSuccess) {
             // Update ProfileBloc with the loaded user
-            context.read<ProfileBloc>().add(UpdateProfile(state.user));
+            context.read<ProfileBloc>().add(LoadProfile());
             context.read<UserProvider>().setUser(state.user);
             Navigator.pushReplacement(
               context,

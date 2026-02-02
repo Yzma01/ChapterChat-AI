@@ -4,6 +4,7 @@ import 'package:chapter_chat_ai/blocs/signup/bloc/signup_state.dart';
 import 'package:chapter_chat_ai/blocs/user/bloc/user_bloc.dart';
 import 'package:chapter_chat_ai/blocs/user/bloc/user_event.dart';
 import 'package:chapter_chat_ai/core/theme/theme_provider.dart';
+import 'package:chapter_chat_ai/screens/auth/loggin_screen.dart';
 import 'package:chapter_chat_ai/screens/main_shell.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_button.dart';
 import 'package:chapter_chat_ai/widgets/components/custom_datepicker.dart';
@@ -110,11 +111,11 @@ class _SignupScreenState extends State<SignupScreen> {
           }
 
           if (state is SignupSuccess) {
-            context.read<ProfileBloc>().add(LoadProfile());
+            context.read<ProfileBloc>().add(SendEmailVerification());
             Navigator.pop(context);
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const MainShell()),
+              MaterialPageRoute(builder: (context) => const LogginScreen()),
             );
           }
         },

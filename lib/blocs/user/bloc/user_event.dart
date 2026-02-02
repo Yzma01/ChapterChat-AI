@@ -6,6 +6,8 @@ class LoadProfile extends ProfileEvent {}
 
 class DowngradeToFreePlan extends ProfileEvent {}
 
+class SendEmailVerification extends ProfileEvent {}
+
 class UpdateProfile extends ProfileEvent {
   final UserModel user;
 
