@@ -43,6 +43,12 @@ class LocalBookModel extends HiveObject {
   @HiveField(12)
   String? localPdfPath;
 
+  @HiveField(13) // NEW: Cover URL from Firebase
+  final String? coverUrl;
+
+  @HiveField(22) // NEW: Local cover image path
+  String? localCoverPath;
+
   @HiveField(14)
   double readingProgress;
 
@@ -81,6 +87,8 @@ class LocalBookModel extends HiveObject {
     this.storySetting,
     required this.pdfUrl,
     this.localPdfPath,
+    this.coverUrl, // NEW
+    this.localCoverPath, // NEW
     this.readingProgress = 0.0,
     this.currentPage = 0,
     this.totalPages = 0,
@@ -105,6 +113,8 @@ class LocalBookModel extends HiveObject {
     String? storySetting,
     String? pdfUrl,
     String? localPdfPath,
+    String? coverUrl, // NEW
+    String? localCoverPath, // NEW
     double? readingProgress,
     int? currentPage,
     int? totalPages,
@@ -128,6 +138,8 @@ class LocalBookModel extends HiveObject {
       storySetting: storySetting ?? this.storySetting,
       pdfUrl: pdfUrl ?? this.pdfUrl,
       localPdfPath: localPdfPath ?? this.localPdfPath,
+      coverUrl: coverUrl ?? this.coverUrl, // NEW
+      localCoverPath: localCoverPath ?? this.localCoverPath, // NEW
       readingProgress: readingProgress ?? this.readingProgress,
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,

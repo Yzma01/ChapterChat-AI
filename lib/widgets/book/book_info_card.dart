@@ -1,19 +1,26 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/book.dart';
+import '../../blocs/library/models/local_book_model.dart';
 
 /// Card widget displaying book cover, title, author, date and Read button
 class BookInfoCard extends StatelessWidget {
-  final Book book;
+  final Book? book;
+  final LocalBookModel? localBook;
   final AppThemeColors colors;
   final VoidCallback? onReadPressed;
 
   const BookInfoCard({
     super.key,
-    required this.book,
+    this.book,
+    this.localBook,
     required this.colors,
     this.onReadPressed,
-  });
+  }) : assert(
+         book != null || localBook != null,
+         'Either book or localBook must be provided',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +39,7 @@ class BookInfoCard extends StatelessWidget {
             children: [
               // Title
               Text(
-                book.title,
+                _title,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -47,7 +54,7 @@ class BookInfoCard extends StatelessWidget {
 
               // Author
               Text(
-                book.author,
+                _author,
                 style: TextStyle(fontSize: 15, color: colors.textSecondary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -56,10 +63,11 @@ class BookInfoCard extends StatelessWidget {
               const SizedBox(height: 4),
 
               // Release date
-              Text(
-                'Released ${book.releaseDateFormatted}',
-                style: TextStyle(fontSize: 14, color: colors.textSecondary),
-              ),
+              if (_releaseDate != null)
+                Text(
+                  'Released $_releaseDate',
+                  style: TextStyle(fontSize: 14, color: colors.textSecondary),
+                ),
 
               const SizedBox(height: 16),
 
@@ -90,7 +98,24 @@ class BookInfoCard extends StatelessWidget {
     );
   }
 
+  String get _title => localBook?.title ?? book?.title ?? '';
+  String get _author => localBook?.author ?? book?.author ?? '';
+  String? get _releaseDate => book?.releaseDateFormatted;
+
   Widget _buildCover() {
+    // Determine cover source
+    String? coverUrl;
+    String? localCoverPath;
+    String? assetPath;
+
+    if (localBook != null) {
+      localCoverPath = localBook!.localCoverPath;
+      coverUrl = localBook!.coverUrl;
+    } else if (book != null) {
+      coverUrl = book!.coverUrl;
+      assetPath = book!.coverImagePath;
+    }
+
     return Container(
       width: 120,
       height: 160,
@@ -106,16 +131,72 @@ class BookInfoCard extends StatelessWidget {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child:
-          book.coverImagePath != null
-              ? Image.asset(
-                book.coverImagePath!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildPlaceholderCover();
-                },
-              )
-              : _buildPlaceholderCover(),
+      child: _buildCoverImage(localCoverPath, coverUrl, assetPath),
+    );
+  }
+
+  Widget _buildCoverImage(String? localPath, String? url, String? assetPath) {
+    // Priority: Local file > Asset > Network URL > Placeholder
+
+    // 1. Try local file (for purchased books)
+    if (localPath != null && localPath.isNotEmpty) {
+      final file = File(localPath);
+      return Image.file(
+        file,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          if (url != null && url.isNotEmpty) {
+            return _buildNetworkImage(url);
+          }
+          return _buildPlaceholderCover();
+        },
+      );
+    }
+
+    // 2. Try asset path (for bundled books)
+    if (assetPath != null && assetPath.isNotEmpty) {
+      return Image.asset(
+        assetPath,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          if (url != null && url.isNotEmpty) {
+            return _buildNetworkImage(url);
+          }
+          return _buildPlaceholderCover();
+        },
+      );
+    }
+
+    // 3. Try network URL (for store books)
+    if (url != null && url.isNotEmpty) {
+      return _buildNetworkImage(url);
+    }
+
+    // 4. Fallback to placeholder
+    return _buildPlaceholderCover();
+  }
+
+  Widget _buildNetworkImage(String url) {
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: colors.primary,
+            value:
+                loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return _buildPlaceholderCover();
+      },
     );
   }
 

@@ -27,6 +27,7 @@ class PurchaseBook extends LibraryEvent {
   final String? publisher;
   final String? storySetting;
   final String pdfUrl;
+  final String? coverUrl; // NEW: Cover URL from Firebase
   final List<LocalCharacterModel> characters;
 
   const PurchaseBook({
@@ -42,11 +43,12 @@ class PurchaseBook extends LibraryEvent {
     this.publisher,
     this.storySetting,
     required this.pdfUrl,
+    this.coverUrl, // NEW
     required this.characters,
   });
 
   @override
-  List<Object?> get props => [id, title, pdfUrl];
+  List<Object?> get props => [id, title, pdfUrl, coverUrl]; // NEW: Include coverUrl in props
 }
 
 /// Update reading progress for a book

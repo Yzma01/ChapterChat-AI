@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/book.dart';
@@ -116,6 +117,21 @@ class BookCard extends StatelessWidget {
       localBook?.isDownloaded ?? book?.isDownloaded ?? false;
 
   Widget _buildCover() {
+    // Determine cover source
+    String? coverUrl;
+    String? localCoverPath;
+    String? assetPath;
+
+    if (localBook != null) {
+      // For local books, prefer local path, fallback to URL
+      localCoverPath = localBook!.localCoverPath;
+      coverUrl = localBook!.coverUrl;
+    } else if (book != null) {
+      // For remote books, use URL or asset path
+      coverUrl = book!.coverUrl;
+      assetPath = book!.coverImagePath;
+    }
+
     return Container(
       width: 70,
       height: 100,
@@ -124,12 +140,88 @@ class BookCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: colors.border, width: 1),
       ),
-      child: Center(
-        child: Icon(
-          Icons.menu_book_outlined,
-          size: 32,
-          color: colors.iconDefault,
-        ),
+      clipBehavior: Clip.antiAlias,
+      child: _buildCoverImage(localCoverPath, coverUrl, assetPath),
+    );
+  }
+
+  Widget _buildCoverImage(String? localPath, String? url, String? assetPath) {
+    // Priority: Local file > Asset > Network URL > Placeholder
+
+    // 1. Try local file (for purchased books)
+    if (localPath != null && localPath.isNotEmpty) {
+      final file = File(localPath);
+      return Image.file(
+        file,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // If local file fails, try URL
+          if (url != null && url.isNotEmpty) {
+            return _buildNetworkImage(url);
+          }
+          return _buildPlaceholder();
+        },
+      );
+    }
+
+    // 2. Try asset path (for bundled books)
+    if (assetPath != null && assetPath.isNotEmpty) {
+      return Image.asset(
+        assetPath,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // If asset fails, try URL
+          if (url != null && url.isNotEmpty) {
+            return _buildNetworkImage(url);
+          }
+          return _buildPlaceholder();
+        },
+      );
+    }
+
+    // 3. Try network URL (for store books)
+    if (url != null && url.isNotEmpty) {
+      return _buildNetworkImage(url);
+    }
+
+    // 4. Fallback to placeholder
+    return _buildPlaceholder();
+  }
+
+  Widget _buildNetworkImage(String url) {
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: colors.primary,
+              value:
+                  loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return _buildPlaceholder();
+      },
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Center(
+      child: Icon(
+        Icons.menu_book_outlined,
+        size: 32,
+        color: colors.iconDefault,
       ),
     );
   }
@@ -302,12 +394,71 @@ class LocalBookCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(
-        child: Icon(
-          Icons.menu_book_outlined,
-          size: 32,
-          color: colors.iconDefault,
-        ),
+      clipBehavior: Clip.antiAlias,
+      child: _buildCoverImage(),
+    );
+  }
+
+  Widget _buildCoverImage() {
+    // Priority: Local file > Network URL > Placeholder
+
+    if (localBook.localCoverPath != null &&
+        localBook.localCoverPath!.isNotEmpty) {
+      final file = File(localBook.localCoverPath!);
+      return Image.file(
+        file,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // If local file fails, try URL
+          if (localBook.coverUrl != null && localBook.coverUrl!.isNotEmpty) {
+            return _buildNetworkImage();
+          }
+          return _buildPlaceholder();
+        },
+      );
+    }
+
+    if (localBook.coverUrl != null && localBook.coverUrl!.isNotEmpty) {
+      return _buildNetworkImage();
+    }
+
+    return _buildPlaceholder();
+  }
+
+  Widget _buildNetworkImage() {
+    return Image.network(
+      localBook.coverUrl!,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: colors.primary,
+              value:
+                  loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return _buildPlaceholder();
+      },
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Center(
+      child: Icon(
+        Icons.menu_book_outlined,
+        size: 32,
+        color: colors.iconDefault,
       ),
     );
   }

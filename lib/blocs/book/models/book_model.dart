@@ -16,9 +16,11 @@ class BookModel {
 
   // ⚠️ Solo para upload
   final File? pdfFile;
+  final File? coverImageFile; // NEW: Cover image file for upload
 
   // ⚠️ Solo para lectura
   final String? pdfUrl;
+  final String? coverUrl; // NEW: Cover image URL from Firebase
 
   final List<CharacterModel>? characters;
 
@@ -34,7 +36,9 @@ class BookModel {
     this.publisher,
     this.storySetting,
     this.pdfFile,
+    this.coverImageFile, // NEW
     this.pdfUrl,
+    this.coverUrl, // NEW
     this.characters,
   });
 
@@ -51,6 +55,7 @@ class BookModel {
       'publisher': publisher,
       'storySetting': storySetting,
       'pdfUrl': pdfUrl,
+      'coverUrl': coverUrl, // NEW: Include cover URL
       'characters': characters?.map((c) => c.toMap()).toList(),
       'createdAt': FieldValue.serverTimestamp(),
     };
@@ -72,6 +77,7 @@ class BookModel {
       publisher: data['publisher'],
       storySetting: data['storySetting'],
       pdfUrl: data['pdfUrl'],
+      coverUrl: data['coverUrl'], // NEW: Read cover URL
       characters:
           (data['characters'] as List<dynamic>?)
               ?.map((c) => CharacterModel.fromMap(c))
@@ -91,7 +97,9 @@ class BookModel {
     String? publisher,
     String? storySetting,
     File? pdfFile,
+    File? coverImageFile, // NEW
     String? pdfUrl,
+    String? coverUrl, // NEW
     List<CharacterModel>? characters,
   }) {
     return BookModel(
@@ -106,7 +114,9 @@ class BookModel {
       publisher: publisher ?? this.publisher,
       storySetting: storySetting ?? this.storySetting,
       pdfFile: pdfFile ?? this.pdfFile,
+      coverImageFile: coverImageFile ?? this.coverImageFile, // NEW
       pdfUrl: pdfUrl ?? this.pdfUrl,
+      coverUrl: coverUrl ?? this.coverUrl, // NEW
       characters: characters ?? this.characters,
     );
   }

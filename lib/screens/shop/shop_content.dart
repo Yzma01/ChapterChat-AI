@@ -72,6 +72,7 @@ class _ShopContentState extends State<ShopContent> {
       setting: model.storySetting ?? '',
       description: model.description,
       pdfUrl: model.pdfUrl,
+      coverUrl: model.coverUrl, // NEW: Include cover URL
       characters:
           model.characters?.map((c) {
             return ChatCharacter(
@@ -215,13 +216,6 @@ class _ShopContentState extends State<ShopContent> {
 
           return SliverList(
             delegate: SliverChildListDelegate([
-              // Solo mostrar géneros si no hay búsqueda activa
-              // if (widget.searchQuery.isEmpty) ...[
-              //   _buildSectionTitle('Genres'),
-              //   _buildGenresList(),
-              //   const SizedBox(height: 24),
-              // ],
-
               // Título de la sección de libros
               _buildSectionTitle(
                 widget.searchQuery.isEmpty

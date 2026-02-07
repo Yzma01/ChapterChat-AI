@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:chapter_chat_ai/blocs/payment/models/card_data_model.dart';
 import 'package:chapter_chat_ai/core/ads/ad_provider.dart';
 import 'package:chapter_chat_ai/core/user/user_provider.dart';
@@ -151,22 +152,8 @@ class _ShopBookDetailScreenState extends State<ShopBookDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 120,
-            height: 170,
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: colors.border, width: 1),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.menu_book_outlined,
-                size: 48,
-                color: colors.iconDefault,
-              ),
-            ),
-          ),
+          // FIXED: Now displays actual cover image
+          _buildCover(colors),
           const SizedBox(width: 20),
           Expanded(
             child: Column(
@@ -195,6 +182,82 @@ class _ShopBookDetailScreenState extends State<ShopBookDetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // FIXED: New method to build cover with image support
+  Widget _buildCover(AppThemeColors colors) {
+    return Container(
+      width: 120,
+      height: 170,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colors.border, width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: _buildCoverImage(colors),
+    );
+  }
+
+  Widget _buildCoverImage(AppThemeColors colors) {
+    // Priority: Asset path > Network URL > Placeholder
+
+    // 1. Try asset path (for bundled books)
+    if (_book.coverImagePath != null && _book.coverImagePath!.isNotEmpty) {
+      return Image.asset(
+        _book.coverImagePath!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // If asset fails, try URL
+          if (_book.coverUrl != null && _book.coverUrl!.isNotEmpty) {
+            return _buildNetworkImage(colors);
+          }
+          return _buildPlaceholder(colors);
+        },
+      );
+    }
+
+    // 2. Try network URL (for store books)
+    if (_book.coverUrl != null && _book.coverUrl!.isNotEmpty) {
+      return _buildNetworkImage(colors);
+    }
+
+    // 3. Fallback to placeholder
+    return _buildPlaceholder(colors);
+  }
+
+  Widget _buildNetworkImage(AppThemeColors colors) {
+    return Image.network(
+      _book.coverUrl!,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: colors.primary,
+            value:
+                loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return _buildPlaceholder(colors);
+      },
+    );
+  }
+
+  Widget _buildPlaceholder(AppThemeColors colors) {
+    return Center(
+      child: Icon(
+        Icons.menu_book_outlined,
+        size: 48,
+        color: colors.iconDefault,
       ),
     );
   }

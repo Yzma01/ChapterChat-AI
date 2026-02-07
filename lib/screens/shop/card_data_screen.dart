@@ -147,6 +147,7 @@ class _CardInputBottomSheetState extends State<CardInputBottomSheet> {
               publisher: _book.publisher,
               storySetting: _book.setting,
               pdfUrl: _book.pdfUrl!,
+              coverUrl: _book.coverUrl, // NEW: Pass cover URL
               characters:
                   _book.characters
                       ?.map(
@@ -170,7 +171,7 @@ class _CardInputBottomSheetState extends State<CardInputBottomSheet> {
         }
 
         if (state is PaymentLoading) {
-          debugPrint('Showing loading dialog'); // Y esto
+          debugPrint('Showing loading dialog');
           showDialog(
             context: context,
             barrierDismissible: false,

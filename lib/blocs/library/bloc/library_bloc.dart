@@ -67,6 +67,7 @@ class LibraryBloc extends Bloc<LibraryEvent, LibraryState> {
         publisher: event.publisher,
         storySetting: event.storySetting,
         pdfUrl: event.pdfUrl,
+        coverUrl: event.coverUrl, // NEW: Pass cover URL
         characters: event.characters,
       );
 

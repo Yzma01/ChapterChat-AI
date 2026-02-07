@@ -20,6 +20,7 @@ import '../../widgets/form/validating_text_field.dart';
 import '../../widgets/form/validating_dropdown.dart';
 import '../../widgets/form/age_rating_selector.dart';
 import '../../widgets/form/pdf_uploader.dart';
+import '../../widgets/form/cover_image_uploader.dart'; // NEW
 import '../../widgets/form/character_form_card.dart';
 import '../../widgets/form/add_character_button.dart';
 import '../../widgets/form/section_title.dart';
@@ -48,11 +49,13 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
   int _minimumAge = 0;
   String? _pdfFileName;
   File? _pdfFile;
+  File? _coverImageFile; // NEW
   List<String> _selectedGenres = [];
 
   // Validation state
   bool _hasTriedToSubmit = false;
   bool _pdfHasError = false;
+  bool _coverImageHasError = false; // NEW
 
   // Characters list
   final List<CharacterFormData> _characters = [];
@@ -134,7 +137,8 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
       minAge: _minimumAge,
       publisher: _publisherController.text,
       storySetting: _settingController.text,
-      pdfFile: _pdfFile!, // File
+      pdfFile: _pdfFile!,
+      coverImageFile: _coverImageFile!, // NEW
       characters:
           _characters.map((c) {
             return CharacterModel(
@@ -146,10 +150,11 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
   }
 
   void _onPublish() {
-    if (!mounted) return; // 🔑 CLAVE
+    if (!mounted) return;
     setState(() {
       _hasTriedToSubmit = true;
       _pdfHasError = _pdfFileName == null;
+      _coverImageHasError = _coverImageFile == null; // NEW
     });
 
     if (_formKey.currentState!.validate()) {
@@ -170,6 +175,14 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
               'Please fill in all character details or remove empty characters',
             ),
           ),
+        );
+        return;
+      }
+
+      // NEW: Validate cover image
+      if (_coverImageFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please upload a book cover image')),
         );
         return;
       }
@@ -403,6 +416,37 @@ class _PublishBookScreenState extends State<PublishBookScreen> {
                         colors: colors,
                         helperText:
                             'E.g., "New York, 1920s" or "Medieval fantasy world"',
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // NEW: Cover Image Upload Section
+                      SectionTitle(title: 'Book cover', colors: colors),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Upload an attractive cover image for your book',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      CoverImageUploader(
+                        colors: colors,
+                        onImageSelected: (file) {
+                          setState(() {
+                            _coverImageFile = file;
+                            if (file != null) {
+                              _coverImageHasError = false;
+                            }
+                          });
+                        },
+                        validator: (file) {
+                          if (_hasTriedToSubmit && file == null) {
+                            return 'Please upload a book cover image';
+                          }
+                          return null;
+                        },
                       ),
 
                       const SizedBox(height: 32),

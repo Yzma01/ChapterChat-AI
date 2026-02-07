@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:chapter_chat_ai/core/ads/ad_provider.dart';
 import 'package:chapter_chat_ai/core/user/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -113,6 +114,7 @@ class BookDetailScreen extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // FIXED: Now displays actual cover image from local storage
         _buildCover(),
         const SizedBox(width: 20),
         Expanded(
@@ -168,6 +170,7 @@ class BookDetailScreen extends StatelessWidget {
     );
   }
 
+  // FIXED: New implementation with cover image support
   Widget _buildCover() {
     return Container(
       width: 120,
@@ -183,6 +186,93 @@ class BookDetailScreen extends StatelessWidget {
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
+      child: _buildCoverImage(),
+    );
+  }
+
+  Widget _buildCoverImage() {
+    // Priority: Local file > Asset > Network URL > Placeholder
+
+    // 1. Try local file first (for purchased books)
+    if (localBook?.localCoverPath != null &&
+        localBook!.localCoverPath!.isNotEmpty) {
+      final file = File(localBook!.localCoverPath!);
+      return Image.file(
+        file,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          debugPrint('❌ Error loading local cover: $error');
+          // If local file fails, try URL
+          if (localBook?.coverUrl != null && localBook!.coverUrl!.isNotEmpty) {
+            return _buildNetworkImage(localBook!.coverUrl!);
+          }
+          // If local book has no URL, try book.coverUrl
+          if (book.coverUrl != null && book.coverUrl!.isNotEmpty) {
+            return _buildNetworkImage(book.coverUrl!);
+          }
+          return _buildPlaceholder();
+        },
+      );
+    }
+
+    // 2. Try asset path (for bundled books)
+    if (book.coverImagePath != null && book.coverImagePath!.isNotEmpty) {
+      return Image.asset(
+        book.coverImagePath!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // If asset fails, try URL
+          if (book.coverUrl != null && book.coverUrl!.isNotEmpty) {
+            return _buildNetworkImage(book.coverUrl!);
+          }
+          return _buildPlaceholder();
+        },
+      );
+    }
+
+    // 3. Try network URL from localBook
+    if (localBook?.coverUrl != null && localBook!.coverUrl!.isNotEmpty) {
+      return _buildNetworkImage(localBook!.coverUrl!);
+    }
+
+    // 4. Try network URL from book
+    if (book.coverUrl != null && book.coverUrl!.isNotEmpty) {
+      return _buildNetworkImage(book.coverUrl!);
+    }
+
+    // 5. Fallback to placeholder
+    return _buildPlaceholder();
+  }
+
+  Widget _buildNetworkImage(String url) {
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: colors.primary,
+            value:
+                loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('❌ Error loading network cover: $error');
+        return _buildPlaceholder();
+      },
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      color: colors.surface,
       child: Center(
         child: Icon(
           Icons.menu_book_rounded,

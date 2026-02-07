@@ -67,6 +67,15 @@ class LibraryLocalStorage {
           await pdfFile.delete();
         }
       }
+
+      // NEW: Delete local cover image
+      if (book.localCoverPath != null) {
+        final coverFile = File(book.localCoverPath!);
+        if (await coverFile.exists()) {
+          await coverFile.delete();
+        }
+      }
+
       await _box.delete(bookId);
       debugPrint('🗑️ Deleted book: ${book.title}');
     }
@@ -129,6 +138,48 @@ class LibraryLocalStorage {
     }
   }
 
+  /// NEW: Download cover image from URL and save locally
+  Future<String?> downloadCoverImage(String? coverUrl, String bookId) async {
+    if (coverUrl == null || coverUrl.isEmpty) {
+      debugPrint('ℹ️ No cover URL provided for book: $bookId');
+      return null;
+    }
+
+    try {
+      debugPrint('⬇️ Downloading cover image for book: $bookId');
+
+      final response = await http.get(Uri.parse(coverUrl));
+      if (response.statusCode != 200) {
+        debugPrint('⚠️ Failed to download cover: ${response.statusCode}');
+        return null;
+      }
+
+      final directory = await getApplicationDocumentsDirectory();
+      final bookDir = Directory('${directory.path}/books/$bookId');
+      if (!await bookDir.exists()) {
+        await bookDir.create(recursive: true);
+      }
+
+      // Detect image extension from URL or content-type
+      String extension = 'jpg';
+      if (coverUrl.contains('.png')) {
+        extension = 'png';
+      } else if (coverUrl.contains('.webp')) {
+        extension = 'webp';
+      }
+
+      final coverPath = '${bookDir.path}/cover.$extension';
+      final coverFile = File(coverPath);
+      await coverFile.writeAsBytes(response.bodyBytes);
+
+      debugPrint('✅ Cover image downloaded: $coverPath');
+      return coverPath;
+    } catch (e) {
+      debugPrint('❌ Error downloading cover image: $e');
+      return null; // Non-critical, continue without cover
+    }
+  }
+
   /// Purchase and download book
   Future<LocalBookModel> purchaseBook({
     required String id,
@@ -143,6 +194,7 @@ class LibraryLocalStorage {
     String? publisher,
     String? storySetting,
     required String pdfUrl,
+    String? coverUrl, // NEW
     required List<LocalCharacterModel> characters,
   }) async {
     try {
@@ -150,6 +202,9 @@ class LibraryLocalStorage {
 
       // Download PDF
       final localPdfPath = await downloadPdf(pdfUrl, id);
+
+      // NEW: Download cover image
+      final localCoverPath = await downloadCoverImage(coverUrl, id);
 
       // Get total pages from PDF
       final document = await PdfDocument.openFile(localPdfPath);
@@ -171,6 +226,8 @@ class LibraryLocalStorage {
         storySetting: storySetting,
         pdfUrl: pdfUrl,
         localPdfPath: localPdfPath,
+        coverUrl: coverUrl, // NEW
+        localCoverPath: localCoverPath, // NEW
         readingProgress: 0.0,
         currentPage: 0,
         totalPages: totalPages,
@@ -197,12 +254,18 @@ class LibraryLocalStorage {
 
   /// Clear all data (for debugging)
   Future<void> clearAll() async {
-    // Delete all local PDF files
+    // Delete all local PDF files and cover images
     for (final book in _box.values) {
       if (book.localPdfPath != null) {
         final pdfFile = File(book.localPdfPath!);
         if (await pdfFile.exists()) {
           await pdfFile.delete();
+        }
+      }
+      if (book.localCoverPath != null) {
+        final coverFile = File(book.localCoverPath!);
+        if (await coverFile.exists()) {
+          await coverFile.delete();
         }
       }
     }

@@ -5,6 +5,7 @@ class Book {
   final String title;
   final String author;
   final String? coverImagePath; // Only for bundled asset images (optional)
+  final String? coverUrl; // NEW: Cover image URL from Firebase
   final bool isRead;
   final bool isDownloaded;
   final double readingProgress;
@@ -33,6 +34,7 @@ class Book {
     required this.title,
     required this.author,
     this.coverImagePath,
+    this.coverUrl, // NEW
     this.isRead = false,
     this.isDownloaded = true,
     this.readingProgress = 0.0,
@@ -109,6 +111,7 @@ class Book {
     String? title,
     String? author,
     String? coverImagePath,
+    String? coverUrl, // NEW
     bool? isRead,
     bool? isDownloaded,
     double? readingProgress,
@@ -131,6 +134,7 @@ class Book {
       title: title ?? this.title,
       author: author ?? this.author,
       coverImagePath: coverImagePath ?? this.coverImagePath,
+      coverUrl: coverUrl ?? this.coverUrl, // NEW
       isRead: isRead ?? this.isRead,
       isDownloaded: isDownloaded ?? this.isDownloaded,
       readingProgress: readingProgress ?? this.readingProgress,

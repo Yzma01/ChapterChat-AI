@@ -31,7 +31,52 @@ class BookRepository {
     }
   }
 
-  /// Save book data with PDF
+  /// NEW: Upload cover image to Firebase Storage
+  Future<String> uploadCoverImage(File file, String bookId) async {
+    try {
+      final storageRef = _storage.ref();
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+      final uid = user.uid;
+
+      // Get file extension
+      final extension = file.path.split('.').last.toLowerCase();
+      final validExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+      if (!validExtensions.contains(extension)) {
+        throw Exception('Invalid image format. Please use JPG, PNG, or WEBP.');
+      }
+
+      final coverRef = storageRef.child(
+        'uploads/$uid/covers/$bookId.$extension',
+      );
+
+      // Determine content type
+      String contentType;
+      switch (extension) {
+        case 'png':
+          contentType = 'image/png';
+          break;
+        case 'webp':
+          contentType = 'image/webp';
+          break;
+        default:
+          contentType = 'image/jpeg';
+      }
+
+      await coverRef.putFile(file, SettableMetadata(contentType: contentType));
+
+      final downloadUrl = await coverRef.getDownloadURL();
+      debugPrint('✅ Cover image uploaded: $downloadUrl');
+      return downloadUrl;
+    } on FirebaseException catch (e) {
+      throw Exception('Cover upload failed: ${e.message}');
+    }
+  }
+
+  /// Save book data with PDF and cover image
   Future<void> saveBookData(BookModel book) async {
     try {
       // Generate a unique ID for the book
@@ -40,11 +85,21 @@ class BookRepository {
       // Upload PDF
       final pdfUrl = await uploadPdf(book.pdfFile!, bookId);
 
+      // Upload cover image (mandatory)
+      if (book.coverImageFile == null) {
+        throw Exception('Cover image is required');
+      }
+      final coverUrl = await uploadCoverImage(book.coverImageFile!, bookId);
+
       // Save to Firestore
-      final data = {...book.toMap(), 'pdfUrl': pdfUrl};
+      final data = {
+        ...book.toMap(),
+        'pdfUrl': pdfUrl,
+        'coverUrl': coverUrl, // NEW: Include cover URL
+      };
 
       await _firestore.collection('books').add(data);
-      debugPrint('✅ Book saved to Firestore');
+      debugPrint('✅ Book saved to Firestore with cover image');
     } on FirebaseException catch (e) {
       throw Exception('Failed to save book data: ${e.message}');
     }
