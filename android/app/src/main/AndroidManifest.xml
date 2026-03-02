@@ -3,6 +3,10 @@
         android:label="chapter_chat_ai"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713 -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-2476432115873368~5170227624"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
